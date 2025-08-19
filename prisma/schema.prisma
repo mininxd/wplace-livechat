@@ -1,0 +1,18 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model users {
+  id        String   @id @default(uuid())
+  uid       String   @db.VarChar(16)
+  name      String   @db.VarChar(16)
+  region    String   @db.VarChar(32)
+  messages  String   @db.VarChar(128)
+  createdAt DateTime @default(now())
+}
