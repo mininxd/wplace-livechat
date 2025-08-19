@@ -14,6 +14,10 @@ const sendLimiter = rateLimit({
   message: { error: "Too many request." }
 });
 
+app.get("/", () => {
+  res.json({status:200})
+})
+
 // GET /users/:region - get all users in a region as flat array
 app.get("/users/:region", async (req, res) => {
   const { region } = req.params;
