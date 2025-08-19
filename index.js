@@ -14,7 +14,7 @@ const sendLimiter = rateLimit({
   message: { error: "Too many request." }
 });
 
-app.get("/", () => {
+app.get("/", async (req, res) => {
   res.json({status:200})
 })
 
