@@ -3,6 +3,7 @@ import { getMessages } from "./connect.js";
 const currentUserId = "12911";
 const chatContainer = document.getElementById("chatContainer");
 let lastMessageTimestamp = null;
+let pollingInterval = null;
 
 async function renderNewMessages(region) {
   const allMessages = await getMessages(region);
@@ -37,8 +38,25 @@ async function renderNewMessages(region) {
   lastMessageTimestamp = newMessages[newMessages.length - 1].createdAt;
 }
 
-// Initial load
-await renderNewMessages("Semarang");
+function startPolling(region) {
+  if (pollingInterval) {
+    clearInterval(pollingInterval);
+  }
+  pollingInterval = setInterval(() => renderNewMessages(region), 3000);
+}
 
-// Poll every 3 seconds for new messages
-// setInterval(() => renderNewMessages("Semarang"), 3000);
+function stopPolling() {
+  if (pollingInterval) {
+    clearInterval(pollingInterval);
+    pollingInterval = null;
+  }
+}
+
+function refreshChat(region) {
+  chatContainer.innerHTML = '';
+  lastMessageTimestamp = null;
+  renderNewMessages(region);
+  startPolling(region);
+}
+
+export { renderNewMessages, startPolling, stopPolling, refreshChat };
