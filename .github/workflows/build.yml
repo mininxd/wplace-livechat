@@ -32,8 +32,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: v${{ github.run_number }}
-          release_name: Build ${{ github.run_number }}
-          body: ${{ github.event.head_commit.message || 'Manual build' }}
+          release_name: "release"
+          body: ${{ github.event.pull_request.body || github.event.head_commit.message || 'Manual build' }}
           draft: false
           prerelease: false
 
