@@ -185,6 +185,12 @@
         .chat-message {
             margin-bottom: 12px;
             animation: slideIn 0.3s ease-out;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-message.own {
+            align-items: flex-end;
         }
 
         .message-author {
@@ -203,13 +209,14 @@
             font-size: 16px;
             line-height: 1.4;
             color: var(--sys-color-on-surface);
+            max-width: 80%;
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
 
         .message-content.own {
             background: var(--sys-color-primary);
             color: var(--sys-color-on-primary);
-            margin-left: auto;
-            max-width: 80%;
         }
 
         .message-content.own .message-author {
@@ -687,6 +694,9 @@
     function addMessageToChat(name, message, timestamp, isOwn = false) {
         const messageDiv = document.createElement('div');
         messageDiv.className = 'chat-message';
+        if (isOwn) {
+            messageDiv.classList.add('own');
+        }
         messageDiv.dataset.timestamp = timestamp;
 
         // Format timestamp
@@ -720,10 +730,6 @@
         sendButton.innerHTML = '<i class="ri-loader-4-line loading-spinner"></i>';
 
         try {
-            // Add message to chat immediately with current timestamp
-            const currentTime = new Date().toISOString();
-            addMessageToChat(userData.name, message, currentTime, true);
-
             // Clear input
             chatInput.value = '';
             chatInput.style.height = 'auto';
