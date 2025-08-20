@@ -1,3 +1,15 @@
+// ==UserScript==
+// @name         Wplace Live Chats
+// @version      1.0
+// @description  Livechat for wplace.live
+// @author       mininxd
+// @match        https://wplace.live/*
+// @match        https://wplace.live
+// @grant        GM_xmlhttpRequest
+// @connect      wplace-live-chat-server.vercel.app
+// @connect      backend.wplace.live
+// ==/UserScript==
+
 (function() {
     'use strict';
 
@@ -330,87 +342,41 @@
     let regionData = null;
     let lastPixelUrl = null;
 
-    // --- Robust Request Interception ---
+    // --- Data Polling Mechanism ---
+    let dataPoller = null;
 
-    function handlePixelData(pixelData) {
-        console.log("Pixel data received:", pixelData);
-        if (pixelData && pixelData.region && pixelData.region.name) {
-            regionData = pixelData.region;
-            console.log("Region data captured:", regionData);
+    function findRegionData() {
+        if (regionData) {
+            if (dataPoller) clearInterval(dataPoller);
+            return;
+        }
 
-            // Update UI if chat is open
-            if (modal.classList.contains('show')) {
-                updateUserInfo();
-                loadMessages();
+        for (const key in window) {
+            if (Object.prototype.hasOwnProperty.call(window, key)) {
+                const prop = window[key];
+                if (prop && typeof prop === 'object' && prop.hasOwnProperty('region')) {
+                    const region = prop.region;
+                    if (region && typeof region === 'object' && region.hasOwnProperty('name')) {
+                        console.log("Found potential region data in window['" + key + "']:", region);
+                        regionData = region;
+                        if (dataPoller) clearInterval(dataPoller);
+
+                        // Update UI if chat is open
+                        if (modal.classList.contains('show')) {
+                            updateUserInfo();
+                            loadMessages();
+                        }
+                        return;
+                    }
+                }
             }
-        } else {
-            console.log("No region data in pixel response");
         }
     }
 
-    // 1. Intercept fetch
-    const originalFetch = window.fetch;
-    window.fetch = async function(...args) {
-        const url = args[0] instanceof Request ? args[0].url : args[0];
-        console.log("FMB_DEBUG (fetch):", url); // Verbose logging
-
-        const result = await originalFetch.apply(this, args);
-
-        if (typeof url === "string" && url.includes("https://backend.wplace.live/s0/pixel")) {
-            lastPixelUrl = url.split("?")[0];
-            console.log("Detected pixel URL via fetch:", lastPixelUrl);
-
-            try {
-                const clonedResponse = result.clone();
-                const pixelData = await clonedResponse.json();
-                handlePixelData(pixelData);
-            } catch (e) {
-                console.error("Error processing pixel data from fetch:", e);
-            }
+    function startDataPolling() {
+        if (!dataPoller) {
+            dataPoller = setInterval(findRegionData, 1000);
         }
-        return result;
-    };
-
-    // 2. Intercept XMLHttpRequest
-    const originalXhrOpen = XMLHttpRequest.prototype.open;
-    const originalXhrSend = XMLHttpRequest.prototype.send;
-
-    XMLHttpRequest.prototype.open = function(method, url, ...rest) {
-        this._url = url; // Store url for later use in send
-        console.log("FMB_DEBUG (XHR open):", url); // Verbose logging
-        return originalXhrOpen.apply(this, [method, url, ...rest]);
-    };
-
-    XMLHttpRequest.prototype.send = function(...args) {
-        this.addEventListener('load', function() {
-            console.log("FMB_DEBUG (XHR load):", this._url); // Verbose logging
-            if (typeof this._url === "string" && this._url.includes("https://backend.wplace.live/s0/pixel")) {
-                lastPixelUrl = this._url.split("?")[0];
-                 console.log("Detected pixel URL via XHR:", lastPixelUrl);
-                try {
-                    const pixelData = JSON.parse(this.responseText);
-                    handlePixelData(pixelData);
-                } catch (e) {
-                    console.error("Error processing pixel data from XHR:", e);
-                }
-            }
-        });
-        return originalXhrSend.apply(this, args);
-    };
-
-    // This function is kept for cases where the chat is opened after a pixel URL was detected
-    async function fetchRegionFromPixel() {
-        if (lastPixelUrl && !regionData) { // Only fetch if we don't have region data yet
-            try {
-                console.log("Manually fetching region from previously detected URL:", lastPixelUrl);
-                const pixelData = await fetchAPI(lastPixelUrl);
-                handlePixelData(pixelData); // Use the central handler
-                return !!regionData;
-            } catch (e) {
-                console.error("Error manually fetching pixel data:", e);
-            }
-        }
-        return false;
     }
 
     // API functions
@@ -590,12 +556,6 @@
 
     // Load and display messages
     async function loadMessages() {
-        // Try to fetch region data if we don't have it but have a pixel URL
-        if (!regionData && lastPixelUrl) {
-            console.log("No region data, trying to fetch from pixel URL...");
-            await fetchRegionFromPixel();
-        }
-
         if (!regionData) {
             console.log("Still no region data available");
             chatMessages.innerHTML = `
@@ -758,8 +718,7 @@
         loadJS('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js', () => {
             loadJS('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/Draggable.min.js', () => {
                 gsap.registerPlugin(Draggable);
-                Draggable.create(".livechat-content", {
-                    trigger: ".livechat-header",
+                Draggable.create(".livechat-fab", {
                     bounds: "body"
                 });
             });
@@ -811,6 +770,7 @@
     // Initialize on page load
     setTimeout(() => {
         initializeUserData();
+        startDataPolling();
     }, 2000);
 
 })();
