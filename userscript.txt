@@ -1,0 +1,11 @@
+// ==UserScript==
+// @name         Wplace Live Chats
+// @namespace    -
+// @version      1.0
+// @description  Livechat for wplace.live
+// @author       mininxd
+// @match        https://wplace.live
+// @grant        GM_addStyle
+// @run-at       document-start
+// @type         module
+// ==/UserScript==

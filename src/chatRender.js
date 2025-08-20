@@ -1,6 +1,9 @@
 import { getMessages } from "./connect.js";
+import { userData, placeData } from "./lib/wplceData.js";
 
-const currentUserId = "12911";
+const user = await userData();
+const userId = user.id;
+
 const chatContainer = document.getElementById("chatContainer");
 let lastMessageTimestamp = null;
 let pollingInterval = null;
@@ -18,7 +21,7 @@ async function renderNewMessages(region) {
   newMessages.forEach(msg => {
     const div = document.createElement("div");
 
-    const isCurrentUser = msg.uid === currentUserId;
+    const isCurrentUser = msg.uid === userId;
     div.className = `px-4 py-2 rounded-3xl max-w-[70%] ${
       isCurrentUser ? "user self-end bg-[#d1f7c4]" : "participant self-start bg-[#e3e9f4]"
     }`;

@@ -2,12 +2,18 @@ import "./style.css";
 import "remixicon/fonts/remixicon.css";
 import { refreshChat, stopPolling } from "./chatRender.js";
 import { sendMessages } from "./connect.js";
+import { userData, placeData } from "./lib/wplceData.js";
+
+const user = await userData();
+const place = await placeData();
+
+const userId = user.id;
+const username = user.name;
 
 let isDelaying = false;
 let delayTimeout = null;
 
-const uid = "12345";
-const region = "Semarang";
+const region = place.region.name;
 
 // Handle live chat button click
 document.getElementById("liveChatBtn").addEventListener("click", () => {
@@ -33,7 +39,7 @@ sendBtn.addEventListener("click", (e) => {
   const div = document.createElement("div");
   div.className = "px-4 py-2 rounded-3xl max-w-[70%] user self-end bg-[#d1f7c4]";
   div.innerHTML = `
-    <p class="text-xs font-medium">mininxd <span class="text-gray-500">#${uid}</span></p>
+    <p class="text-xs font-medium">mininxd <span class="text-gray-500">#${userId}</span></p>
     <p class="mt-1">${inputMessages.value}</p>
   `;
   chatContainer.appendChild(div);
@@ -42,7 +48,7 @@ sendBtn.addEventListener("click", (e) => {
   const messageText = inputMessages.value;
   inputMessages.value = ""; // Clear input immediately
   
-  sendMessages(uid, "mininxd", messageText, region)
+  sendMessages(userId, "mininxd", messageText, region)
     .finally(() => {
       // Set delay period after API call completes
       delayTimeout = setTimeout(() => {
