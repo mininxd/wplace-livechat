@@ -9,6 +9,13 @@
         document.head.appendChild(link);
     };
 
+    const loadJS = (src, callback) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = callback;
+        document.head.appendChild(script);
+    };
+
     // Load Rubik font and Remix Icons
     loadCSS('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap');
     loadCSS('https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css');
@@ -302,7 +309,7 @@
                 max-width: 100vw;
                 max-height: 100vh;
             }
-            
+
             .livechat-fab {
                 bottom: 15vh;
                 right: 16px;
@@ -323,60 +330,78 @@
     let regionData = null;
     let lastPixelUrl = null;
 
-    // Intercept fetch to detect pixel API calls
+    // --- Robust Request Interception ---
+
+    function handlePixelData(pixelData) {
+        console.log("Pixel data received:", pixelData);
+        if (pixelData && pixelData.region && pixelData.region.name) {
+            regionData = pixelData.region;
+            console.log("Region data captured:", regionData);
+
+            // Update UI if chat is open
+            if (modal.classList.contains('show')) {
+                updateUserInfo();
+                loadMessages();
+            }
+        } else {
+            console.log("No region data in pixel response");
+        }
+    }
+
+    // 1. Intercept fetch
     const originalFetch = window.fetch;
     window.fetch = async function(...args) {
-        const url = args[0];
-        
+        const url = args[0] instanceof Request ? args[0].url : args[0];
+        const result = await originalFetch.apply(this, args);
+
         if (typeof url === "string" && url.includes("https://backend.wplace.live/s0/pixel")) {
             lastPixelUrl = url.split("?")[0];
-            console.log("Detected pixel URL:", lastPixelUrl);
-            
+            console.log("Detected pixel URL via fetch:", lastPixelUrl);
+
             try {
-                const result = await originalFetch.apply(this, args);
-                
-                // Clone the response to avoid consuming it
                 const clonedResponse = result.clone();
                 const pixelData = await clonedResponse.json();
-                
-                console.log("Pixel data received:", pixelData);
-                
-                if (pixelData && pixelData.region && pixelData.region.name) {
-                    regionData = pixelData.region;
-                    console.log("Region data captured:", regionData);
-                    
-                    // Update UI if chat is open
-                    if (modal.classList.contains('show')) {
-                        updateUserInfo();
-                        loadMessages();
-                    }
-                } else {
-                    console.log("No region data in pixel response");
-                }
-                
-                return result;
+                handlePixelData(pixelData);
             } catch (e) {
-                console.error("Error processing pixel data:", e);
-                return originalFetch.apply(this, args);
+                console.error("Error processing pixel data from fetch:", e);
             }
         }
-        
-        return originalFetch.apply(this, args);
+        return result;
     };
 
-    // Alternative method: Also try to fetch region data manually if we have the pixel URL
-    async function fetchRegionFromPixel() {
-        if (lastPixelUrl) {
-            try {
-                console.log("Manually fetching region from:", lastPixelUrl);
-                const pixelData = await fetchAPI(lastPixelUrl);
-                console.log("Manual pixel data:", pixelData);
-                
-                if (pixelData && pixelData.region && pixelData.region.name) {
-                    regionData = pixelData.region;
-                    console.log("Region manually captured:", regionData);
-                    return true;
+    // 2. Intercept XMLHttpRequest
+    const originalXhrOpen = XMLHttpRequest.prototype.open;
+    const originalXhrSend = XMLHttpRequest.prototype.send;
+
+    XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+        this._url = url; // Store url for later use in send
+        return originalXhrOpen.apply(this, [method, url, ...rest]);
+    };
+
+    XMLHttpRequest.prototype.send = function(...args) {
+        this.addEventListener('load', function() {
+            if (typeof this._url === "string" && this._url.includes("https://backend.wplace.live/s0/pixel")) {
+                lastPixelUrl = this._url.split("?")[0];
+                 console.log("Detected pixel URL via XHR:", lastPixelUrl);
+                try {
+                    const pixelData = JSON.parse(this.responseText);
+                    handlePixelData(pixelData);
+                } catch (e) {
+                    console.error("Error processing pixel data from XHR:", e);
                 }
+            }
+        });
+        return originalXhrSend.apply(this, args);
+    };
+
+    // This function is kept for cases where the chat is opened after a pixel URL was detected
+    async function fetchRegionFromPixel() {
+        if (lastPixelUrl && !regionData) { // Only fetch if we don't have region data yet
+            try {
+                console.log("Manually fetching region from previously detected URL:", lastPixelUrl);
+                const pixelData = await fetchAPI(lastPixelUrl);
+                handlePixelData(pixelData); // Use the central handler
+                return !!regionData;
             } catch (e) {
                 console.error("Error manually fetching pixel data:", e);
             }
@@ -605,7 +630,7 @@
 
             const response = await fetchMessages(regionData.name);
             chatMessages.innerHTML = '';
-            
+
             if (response && response.data && response.data.length > 0) {
                 console.log(`Loaded ${response.data.length} messages for ${regionData.name}`);
                 response.data.forEach(msg => {
@@ -621,7 +646,7 @@
                     </div>
                 `;
             }
-            
+
             chatMessages.scrollTop = chatMessages.scrollHeight;
             chatInput.disabled = false;
             sendButton.disabled = false;
@@ -643,15 +668,15 @@
     function addMessageToChat(name, message, timestamp, isOwn = false) {
         const messageDiv = document.createElement('div');
         messageDiv.className = 'chat-message';
-        
+
         // Format timestamp
         const date = new Date(timestamp);
-        const timeString = date.toLocaleTimeString('en-US', { 
-            hour: '2-digit', 
+        const timeString = date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
             minute: '2-digit',
-            hour12: false 
+            hour12: false
         });
-        
+
         messageDiv.innerHTML = `
             <div class="message-author">${isOwn ? `${name} (You)` : name}</div>
             <div class="message-content ${isOwn ? 'own' : ''}">
@@ -666,7 +691,7 @@
     // Send message function
     async function handleSendMessage() {
         if (!userData || !regionData) return;
-        
+
         const message = chatInput.value.trim();
         if (!message) return;
 
@@ -678,19 +703,19 @@
             // Add message to chat immediately with current timestamp
             const currentTime = new Date().toISOString();
             addMessageToChat(userData.name, message, currentTime, true);
-            
+
             // Clear input
             chatInput.value = '';
             chatInput.style.height = 'auto';
 
             // Send to server
             await sendMessage(userData.id, userData.name, message, regionData.name);
-            
+
             // Refresh messages after a short delay to get the actual server response
             setTimeout(() => {
                 loadMessages();
             }, 1000);
-            
+
         } catch (error) {
             console.error('Error sending message:', error);
             // Show error message
@@ -724,16 +749,27 @@
     // Event listeners
     fab.addEventListener('click', async () => {
         modal.classList.add('show');
-        
+
+        // Load GSAP and Draggable
+        loadJS('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js', () => {
+            loadJS('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/Draggable.min.js', () => {
+                gsap.registerPlugin(Draggable);
+                Draggable.create(".livechat-content", {
+                    trigger: ".livechat-header",
+                    bounds: "body"
+                });
+            });
+        });
+
         // Initialize user data if not already loaded
         if (!userData) {
             await initializeUserData();
         }
-        
+
         updateUserInfo();
         await loadMessages();
         startAutoRefresh();
-        
+
         if (userData && regionData) {
             chatInput.focus();
         }
