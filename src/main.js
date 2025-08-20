@@ -4,12 +4,14 @@ import { refreshChat, stopPolling } from "./chatRender.js";
 import { sendMessages } from "./connect.js";
 import { userData, placeData } from "./lib/wplaceData.js";
 
-function init() {
+import { isDetected } from "./lib/detectHttpRequest.js";
+
+function run() {
   return (async function() {
     // Fetch user data
     const user = await userData();
-    const userId = user.id;
-    const username = user.name;
+    const username =  user.name
+    const userId = user.id
 
     let isDelaying = false;
     let delayTimeout = null;
@@ -17,7 +19,10 @@ function init() {
     // Fetch place data
     const place = await placeData();
     const region = place.region.name;
-
+    
+    usernameEl.innerHTML = username;
+    uidEl.innerHTML = userId;
+    regionEl.innerHTML = region;
     // Handle live chat button click
     document.getElementById("liveChatBtn").addEventListener("click", () => {
       chatModal.showModal();
@@ -65,5 +70,9 @@ function init() {
   })();
 }
 
-// Immediately call init
-init();
+
+(async () => {
+  console.log("Starting Live Chat...");
+  if (await isDetected()) run();
+})();
+

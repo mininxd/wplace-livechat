@@ -6,6 +6,6 @@
 // @author       mininxd
 // @match        https://wplace.live
 // @grant        GM_addStyle
-// @run-at       document-start
+// @run-at       document-idle
 // @type         module
 // ==/UserScript==

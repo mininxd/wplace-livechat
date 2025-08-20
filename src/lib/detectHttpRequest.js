@@ -17,3 +17,7 @@ window.fetch = async function(...args) {
 export default function main() {
     return lastPixelUrl;
 }
+
+export async function isDetected() {
+  return lastPixelUrl !== null
+}
