@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Wplace Live Chats
-// @namespace    -
 // @version      1.0
 // @description  Livechat for wplace.live
 // @author       mininxd
+// @match        https://wplace.live/*
 // @match        https://wplace.live
-// @grant        GM_addStyle
-// @run-at       document-idle
-// @type         module
+// @grant        GM_xmlhttpRequest
+// @connect      wplace-live-chat-server.vercel.app
+// @connect      backend.wplace.live
 // ==/UserScript==

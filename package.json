@@ -20,6 +20,7 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.12",
     "axios": "^1.11.0",
+    "javascript-obfuscator": "^4.1.1",
     "jsdom": "^26.1.0",
     "remixicon": "^4.6.0",
     "tailwindcss": "^4.1.12"
