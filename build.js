@@ -1,5 +1,5 @@
 import fs from 'fs';
-import path from 'path';
+import { build } from 'esbuild';
 
 // Create dist directory if it doesn't exist
 if (!fs.existsSync('dist')) {
@@ -8,15 +8,6 @@ if (!fs.existsSync('dist')) {
 
 // Read userscript metadata
 const metadata = fs.readFileSync('userscript.txt', 'utf8');
-
-// Read and bundle all JS files
-const mainJs = fs.readFileSync('src/main.js', 'utf8');
-const connectJs = fs.readFileSync('src/connect.js', 'utf8');
-const chatRenderJs = fs.readFileSync('src/chatRender.js', 'utf8');
-const detectHttpJs = fs.readFileSync('src/lib/detectHttpRequest.js', 'utf8');
-const wplaceDataJs = fs.readFileSync('src/lib/wplaceData.js', 'utf8');
-const stylesCss = fs.readFileSync('src/style.css', 'utf8');
-const themesCss = fs.readFileSync('src/themes.css', 'utf8');
 
 // Read HTML content from index.html
 const htmlContent = fs.readFileSync('index.html', 'utf8');
@@ -28,6 +19,25 @@ const chatModalMatch = htmlContent.match(/<dialog id="chatModal"[\s\S]*?<\/dialo
 const chatButtonHtml = chatButtonMatch ? chatButtonMatch[0] : '';
 const chatModalHtml = chatModalMatch ? chatModalMatch[0] : '';
 
+// Bundle JavaScript with esbuild
+const result = await build({
+  entryPoints: ['src/main.js'],
+  bundle: true,
+  format: 'iife',
+  write: false,
+  minify: false,
+  target: 'es2020',
+  define: {
+    'process.env.NODE_ENV': '"production"'
+  }
+});
+
+const bundledJs = result.outputFiles[0].text;
+
+// Read CSS files
+const stylesCss = fs.readFileSync('src/style.css', 'utf8');
+const themesCss = fs.readFileSync('src/themes.css', 'utf8');
+
 // Create userscript content
 const userscript = `${metadata}
 
@@ -35,29 +45,19 @@ const userscript = `${metadata}
     'use strict';
     
     // Inject CSS
-    const css = \`${stylesCss}\n${themesCss}\`;
+    const css = \`${stylesCss}
+${themesCss}\`;
     const style = document.createElement('style');
     style.textContent = css;
     document.head.appendChild(style);
     
     // Inject HTML
-    const chatHtml = \`${chatButtonHtml}\n${chatModalHtml}\`;
+    const chatHtml = \`${chatButtonHtml}
+${chatModalHtml}\`;
     document.body.insertAdjacentHTML('beforeend', chatHtml);
     
-    // Utility functions
-    ${detectHttpJs.replace('export default function main()', 'function getPixelUrl()')}
-    
-    // Connection functions
-    ${connectJs.replace(/export async function/g, 'async function')}
-    
-    // Wplace data functions
-    ${wplaceDataJs.replace(/import pixelUrl from.*\n/, '').replace(/export async function/g, 'async function').replace('pixelUrl()', 'getPixelUrl()')}
-    
-    // Chat render functions
-    ${chatRenderJs.replace(/import.*\n/g, '').replace(/export \{.*\};/, '')}
-    
-    // Main functionality
-    ${mainJs.replace(/import.*\n/g, '').replace('./lib/wplceData.js', './lib/wplaceData.js')}
+    // Bundled JavaScript
+    ${bundledJs.replace('(() => {', '').replace(/}\)\(\);$/, '')}
     
 })();`;
 
