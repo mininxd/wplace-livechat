@@ -1,14 +1,15 @@
 import { getMessages } from "./connect.js";
-import { userData, placeData } from "./lib/wplceData.js";
+import { userData, placeData } from "./lib/wplaceData.js";
 
-const user = await userData();
-const userId = user.id;
 
 const chatContainer = document.getElementById("chatContainer");
 let lastMessageTimestamp = null;
 let pollingInterval = null;
 
 async function renderNewMessages(region) {
+  const user = await userData();
+  const userId = user.id;
+  
   const allMessages = await getMessages(region);
 
   // Only take messages that are newer than last rendered
@@ -45,7 +46,7 @@ function startPolling(region) {
   if (pollingInterval) {
     clearInterval(pollingInterval);
   }
-  pollingInterval = setInterval(() => renderNewMessages(region), 3000);
+  pollingInterval = setInterval(() => renderNewMessages(region), 2500);
 }
 
 function stopPolling() {

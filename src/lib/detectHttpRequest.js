@@ -8,7 +8,7 @@ window.fetch = async function(...args) {
     if (typeof url === "string" && url.includes("https://backend.wplace.live/s0/pixel")) {
         lastPixelUrl = url.split("?")[0];
         console.log("Detected pixel URL:", lastPixelUrl);
-    }
+    } else { return null }
 
     return pixelAPI.apply(this, args);
 };

@@ -1,67 +1,69 @@
 import fs from 'fs';
-import { build } from 'esbuild';
+import path from 'path';
+import { transformAsync } from '@babel/core';
+import { JSDOM } from 'jsdom';
 
-// Create dist directory if it doesn't exist
-if (!fs.existsSync('dist')) {
-    fs.mkdirSync('dist');
-}
+async function buildUserscript() {
+    // Ensure dist exists
+    if (!fs.existsSync('dist')) fs.mkdirSync('dist');
 
-// Read userscript metadata
-const metadata = fs.readFileSync('userscript.txt', 'utf8');
+    // Read userscript metadata
+    const metadata = fs.readFileSync('userscript.txt', 'utf8');
 
-// Read HTML content from index.html
-const htmlContent = fs.readFileSync('index.html', 'utf8');
+    // Read index.html
+    const htmlContent = fs.readFileSync('dist/index.html', 'utf8');
+    const dom = new JSDOM(htmlContent);
+    const document = dom.window.document;
 
-// Extract the chat modal and button HTML
-const chatButtonMatch = htmlContent.match(/<div class="fixed bottom-\[100px\] right-\[20px\]">[\s\S]*?<\/div>/);
-const chatModalMatch = htmlContent.match(/<dialog id="chatModal"[\s\S]*?<\/dialog>/);
+    // Pick chat button and modal by selectors
+    const chatButtonHtml = document.querySelector('div.fixed.bottom-\\[100px\\].right-\\[20px\\]')?.outerHTML || '';
+    const chatModalHtml = document.querySelector('dialog#chatModal')?.outerHTML || '';
 
-const chatButtonHtml = chatButtonMatch ? chatButtonMatch[0] : '';
-const chatModalHtml = chatModalMatch ? chatModalMatch[0] : '';
+    // Locate assets
+    const assetsDir = path.join('dist', 'assets');
+    const files = fs.readdirSync(assetsDir);
 
-// Bundle JavaScript with esbuild
-const result = await build({
-  entryPoints: ['src/main.js'],
-  bundle: true,
-  format: 'iife',
-  write: false,
-  minify: false,
-  target: 'es2020',
-  define: {
-    'process.env.NODE_ENV': '"production"'
-  }
-});
+    const jsFile = files.find(f => f.startsWith('index-') && f.endsWith('.js'));
+    const cssFile = files.find(f => f.startsWith('index-') && f.endsWith('.css'));
 
-const bundledJs = result.outputFiles[0].text;
+    if (!jsFile || !cssFile) {
+        console.error('Could not find JS or CSS in dist/assets');
+        process.exit(1);
+    }
 
-// Read CSS files
-const stylesCss = fs.readFileSync('src/style.css', 'utf8');
-const themesCss = fs.readFileSync('src/themes.css', 'utf8');
+    const distJs = fs.readFileSync(path.join(assetsDir, jsFile), 'utf8');
+    const distCss = fs.readFileSync(path.join(assetsDir, cssFile), 'utf8');
 
-// Create userscript content
-const userscript = `${metadata}
+    // Transpile JS to ES5
+    const transpiled = await transformAsync(distJs, {
+        presets: [['@babel/preset-env', { targets: { ie: '11' } }]],
+        comments: false,
+        minified: true,
+    });
+
+    // Build userscript
+    const userscript = `${metadata}
 
 (function() {
     'use strict';
-    
+
     // Inject CSS
-    const css = \`${stylesCss}
-${themesCss}\`;
-    const style = document.createElement('style');
-    style.textContent = css;
+    var style = document.createElement('style');
+    style.textContent = \`${distCss}\`;
     document.head.appendChild(style);
-    
+
     // Inject HTML
-    const chatHtml = \`${chatButtonHtml}
-${chatModalHtml}\`;
-    document.body.insertAdjacentHTML('beforeend', chatHtml);
-    
-    // Bundled JavaScript
-    ${bundledJs.replace('(() => {', '').replace(/}\)\(\);$/, '')}
-    
-})();`;
+    document.body.insertAdjacentHTML('beforeend', \`${chatButtonHtml}\n${chatModalHtml}\`);
 
-// Write userscript file
-fs.writeFileSync('dist/wplace-livechat.user.js', userscript);
+    // Inject JS
+    ${transpiled.code}
 
-console.log('Userscript built successfully!');
+})();
+`;
+
+    fs.writeFileSync(path.join('dist', 'wplace-livechat.user.js'), userscript);
+    console.log('Userscript built successfully!');
+}
+
+buildUserscript();
+
