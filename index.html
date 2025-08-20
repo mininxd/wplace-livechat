@@ -1,0 +1,39 @@
+<!doctype html>
+<html data-theme="light" lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>wplace live chat</title>
+  </head>
+  <body>
+    <div class="fixed bottom-[100px] right-[20px]">
+      <button onclick="chatModal.showModal()" class="btn btn-primary shadow-2xl rounded-3xl">Live Chat</button>
+    </div>
+    
+  <!--livechat--> 
+<dialog id="chatModal" class="modal">
+  <div class="modal-box">
+    <div class="modal-top bg-[#e3e9f4] px-3 rubik-font flex justify-between">
+      <div class="w-[50%] font-bold">
+        <span class="username">name</span>
+        <span class="uid font-normal">id</span>
+      </div>
+      <h1 class="font-medium">region</h1>
+    </div>
+    <div id="chatContainer" class="p-2 mt-5 min-h-[120px] max-h-[250px] overflow-y-scroll flex flex-col gap-2"></div>
+
+    <div class="join w-full">
+    <input id="inputMessages" type="text" placeholder="" class="input input-md join-item rounded-l-3xl" />
+    <button id="sendBtn" class="join-item btn btn-primary btn-md rounded-r-3xl"><i class="ri-send-plane-line"></i></button>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

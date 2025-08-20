@@ -1,0 +1,17 @@
+@import "tailwindcss";
+@import "./themes.css";
+
+
+.rubik-font {
+  font-family: "Rubik", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: auto;
+  font-style: auto;
+}
+
+.participant {
+  background: #e3e9f4;
+}
+.user {
+  background: #d1f7c4;
+}
