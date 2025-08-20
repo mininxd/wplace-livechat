@@ -185,6 +185,12 @@
         .chat-message {
             margin-bottom: 12px;
             animation: slideIn 0.3s ease-out;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-message.own {
+            align-items: flex-end;
         }
 
         .message-author {
@@ -203,13 +209,14 @@
             font-size: 16px;
             line-height: 1.4;
             color: var(--sys-color-on-surface);
+            max-width: 80%;
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
 
         .message-content.own {
             background: var(--sys-color-primary);
             color: var(--sys-color-on-primary);
-            margin-left: auto;
-            max-width: 80%;
         }
 
         .message-content.own .message-author {
@@ -617,31 +624,51 @@
             return;
         }
 
+        const isInitialLoad = chatMessages.querySelector('.chat-message') === null;
+
         try {
-            if (debug) console.log("Loading messages for region:", regionData.name);
-            chatMessages.innerHTML = `
-                <div class="loading-indicator">
-                    <i class="ri-loader-4-line loading-spinner"></i> Loading messages for ${regionData.name}...
-                </div>
-            `;
-
-            const response = await fetchMessages(regionData.name);
-            chatMessages.innerHTML = '';
-
-            if (response && response.data && response.data.length > 0) {
-                if (debug) console.log(`Loaded ${response.data.length} messages for ${regionData.name}`);
-                response.data.forEach(msg => {
-                    addMessageToChat(msg.name, msg.messages, msg.createdAt, msg.uid === userData.id.toString());
-                });
-            } else {
-                if (debug) console.log("No messages found for region:", regionData.name);
+            if (isInitialLoad) {
+                if (debug) console.log("Initial load of messages for region:", regionData.name);
                 chatMessages.innerHTML = `
-                    <div class="info-message">
-                        <i class="ri-chat-new-line"></i>
-                        <div><strong>Welcome to ${regionData.name} chat!</strong></div>
-                        <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Be the first to start the conversation in this region.</div>
+                    <div class="loading-indicator">
+                        <i class="ri-loader-4-line loading-spinner"></i> Loading messages for ${regionData.name}...
                     </div>
                 `;
+            }
+
+            const response = await fetchMessages(regionData.name);
+
+            if (isInitialLoad) {
+                chatMessages.innerHTML = ''; // Clear loading indicator
+                if (response && response.data && response.data.length > 0) {
+                    if (debug) console.log(`Loaded ${response.data.length} messages for ${regionData.name}`);
+                    response.data.forEach(msg => {
+                        addMessageToChat(msg.name, msg.messages, msg.createdAt, msg.uid === userData.id.toString());
+                    });
+                } else {
+                    if (debug) console.log("No messages found for region:", regionData.name);
+                    chatMessages.innerHTML = `
+                        <div class="info-message">
+                            <i class="ri-chat-new-line"></i>
+                            <div><strong>Welcome to ${regionData.name} chat!</strong></div>
+                            <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Be the first to start the conversation in this region.</div>
+                        </div>
+                    `;
+                }
+            } else {
+                // This is a refresh, only add new messages
+                const lastMessage = chatMessages.querySelector('.chat-message:last-child');
+                const lastTimestamp = lastMessage ? lastMessage.dataset.timestamp : null;
+
+                if (lastTimestamp && response && response.data && response.data.length > 0) {
+                    const newMessages = response.data.filter(msg => new Date(msg.createdAt) > new Date(lastTimestamp));
+                    if (newMessages.length > 0 && debug) {
+                        console.log(`Found ${newMessages.length} new messages.`);
+                    }
+                    newMessages.forEach(msg => {
+                        addMessageToChat(msg.name, msg.messages, msg.createdAt, msg.uid === userData.id.toString());
+                    });
+                }
             }
 
             chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -649,15 +676,17 @@
             sendButton.disabled = false;
         } catch (error) {
             if (debug) console.error('Error loading messages:', error);
-            chatMessages.innerHTML = `
-                <div class="info-message">
-                    <i class="ri-error-warning-line"></i>
-                    <div><strong>Failed to load messages</strong></div>
-                    <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Please check your connection and try again.</div>
-                </div>
-            `;
-            chatInput.disabled = true;
-            sendButton.disabled = true;
+            if (isInitialLoad) {
+                chatMessages.innerHTML = `
+                    <div class="info-message">
+                        <i class="ri-error-warning-line"></i>
+                        <div><strong>Failed to load messages</strong></div>
+                        <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Please check your connection and try again.</div>
+                    </div>
+                `;
+                chatInput.disabled = true;
+                sendButton.disabled = true;
+            }
         }
     }
 
@@ -665,6 +694,10 @@
     function addMessageToChat(name, message, timestamp, isOwn = false) {
         const messageDiv = document.createElement('div');
         messageDiv.className = 'chat-message';
+        if (isOwn) {
+            messageDiv.classList.add('own');
+        }
+        messageDiv.dataset.timestamp = timestamp;
 
         // Format timestamp
         const date = new Date(timestamp);
@@ -697,10 +730,6 @@
         sendButton.innerHTML = '<i class="ri-loader-4-line loading-spinner"></i>';
 
         try {
-            // Add message to chat immediately with current timestamp
-            const currentTime = new Date().toISOString();
-            addMessageToChat(userData.name, message, currentTime, true);
-
             // Clear input
             chatInput.value = '';
             chatInput.style.height = 'auto';
