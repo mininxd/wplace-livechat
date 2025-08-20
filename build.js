@@ -1,6 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 
+// Create dist directory if it doesn't exist
+if (!fs.existsSync('dist')) {
+    fs.mkdirSync('dist');
+}
+
 // Read userscript metadata
 const metadata = fs.readFileSync('userscript.txt', 'utf8');
 
