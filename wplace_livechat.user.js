@@ -355,40 +355,46 @@
     let regionData = null;
     let lastPixelUrl = null;
 
-    // --- Data Polling Mechanism ---
-    let dataPoller = null;
+    // --- Data Fetching via Performance Entries ---
+    let regionDataPoller = null;
+    let lastCheckedUrl = '';
 
-    function findRegionData() {
+    async function checkForPixelUrl() {
         if (regionData) {
-            if (dataPoller) clearInterval(dataPoller);
+            if (regionDataPoller) clearInterval(regionDataPoller);
             return;
         }
 
-        for (const key in window) {
-            if (Object.prototype.hasOwnProperty.call(window, key)) {
-                const prop = window[key];
-                if (prop && typeof prop === 'object' && prop.hasOwnProperty('region')) {
-                    const region = prop.region;
-                    if (region && typeof region === 'object' && region.hasOwnProperty('name')) {
-                        if (debug) console.log("Found potential region data in window['" + key + "']:", region);
-                        regionData = region;
-                        if (dataPoller) clearInterval(dataPoller);
+        const resources = performance.getEntriesByType("resource");
+        const pixelResource = resources.reverse().find(r => r.name.includes("https://backend.wplace.live/s0/pixel/"));
 
-                        // Update UI if chat is open
-                        if (modal.classList.contains('show')) {
-                            updateUserInfo();
-                            loadMessages();
-                        }
-                        return;
+        if (pixelResource && pixelResource.name !== lastCheckedUrl) {
+            lastCheckedUrl = pixelResource.name;
+            const url = lastCheckedUrl.split('?')[0];
+            if (debug) console.log("Found pixel URL in performance entries:", url);
+
+            try {
+                const data = await fetchAPI(url);
+                if (data && data.region && data.region.name) {
+                    regionData = data.region;
+                    if (debug) console.log("Region data fetched successfully:", regionData);
+                    if (regionDataPoller) clearInterval(regionDataPoller);
+
+                    // Update UI if chat is open
+                    if (modal.classList.contains('show')) {
+                        updateUserInfo();
+                        loadMessages();
                     }
                 }
+            } catch (error) {
+                if (debug) console.error("Error fetching region data from performance entry:", error);
             }
         }
     }
 
     function startDataPolling() {
-        if (!dataPoller) {
-            dataPoller = setInterval(findRegionData, 3000);
+        if (!regionDataPoller) {
+            regionDataPoller = setInterval(checkForPixelUrl, 1000);
         }
     }
 
