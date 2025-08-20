@@ -4,17 +4,24 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite build --watch --mode development",
     "build": "vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@babel/cli": "^7.28.3",
+    "@babel/core": "^7.28.3",
+    "@babel/preset-env": "^7.28.3",
     "daisyui": "^5.0.50",
-    "vite": "^7.0.4"
+    "esbuild": "^0.25.9",
+    "vite": "^7.0.4",
+    "vite-userscript-plugin": "^1.11.0"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.12",
     "axios": "^1.11.0",
+    "javascript-obfuscator": "^4.1.1",
+    "jsdom": "^26.1.0",
     "remixicon": "^4.6.0",
     "tailwindcss": "^4.1.12"
   }

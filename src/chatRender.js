@@ -1,11 +1,15 @@
 import { getMessages } from "./connect.js";
+import { userData, placeData } from "./lib/wplaceData.js";
 
-const currentUserId = "12911";
+
 const chatContainer = document.getElementById("chatContainer");
 let lastMessageTimestamp = null;
 let pollingInterval = null;
 
 async function renderNewMessages(region) {
+  const user = await userData();
+  const userId = user.id;
+  
   const allMessages = await getMessages(region);
 
   // Only take messages that are newer than last rendered
@@ -18,7 +22,7 @@ async function renderNewMessages(region) {
   newMessages.forEach(msg => {
     const div = document.createElement("div");
 
-    const isCurrentUser = msg.uid === currentUserId;
+    const isCurrentUser = msg.uid === userId;
     div.className = `px-4 py-2 rounded-3xl max-w-[70%] ${
       isCurrentUser ? "user self-end bg-[#d1f7c4]" : "participant self-start bg-[#e3e9f4]"
     }`;
@@ -42,7 +46,7 @@ function startPolling(region) {
   if (pollingInterval) {
     clearInterval(pollingInterval);
   }
-  pollingInterval = setInterval(() => renderNewMessages(region), 3000);
+  pollingInterval = setInterval(() => renderNewMessages(region), 2500);
 }
 
 function stopPolling() {
