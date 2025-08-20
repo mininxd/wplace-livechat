@@ -352,6 +352,8 @@
     const originalFetch = window.fetch;
     window.fetch = async function(...args) {
         const url = args[0] instanceof Request ? args[0].url : args[0];
+        console.log("FMB_DEBUG (fetch):", url); // Verbose logging
+
         const result = await originalFetch.apply(this, args);
 
         if (typeof url === "string" && url.includes("https://backend.wplace.live/s0/pixel")) {
@@ -375,11 +377,13 @@
 
     XMLHttpRequest.prototype.open = function(method, url, ...rest) {
         this._url = url; // Store url for later use in send
+        console.log("FMB_DEBUG (XHR open):", url); // Verbose logging
         return originalXhrOpen.apply(this, [method, url, ...rest]);
     };
 
     XMLHttpRequest.prototype.send = function(...args) {
         this.addEventListener('load', function() {
+            console.log("FMB_DEBUG (XHR load):", this._url); // Verbose logging
             if (typeof this._url === "string" && this._url.includes("https://backend.wplace.live/s0/pixel")) {
                 lastPixelUrl = this._url.split("?")[0];
                  console.log("Detected pixel URL via XHR:", lastPixelUrl);
