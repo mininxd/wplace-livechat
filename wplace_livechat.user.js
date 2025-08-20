@@ -37,13 +37,25 @@
     // Create styles with Material You colors
     const styles = `
         :root {
-            --m-primary: #2196F3;
-            --m-primary-dark: #1976D2;
-            --m-primary-light: #E3F2FD;
-            --m-on-primary: #ffffff;
-            --m-surface: #F8F9FA;
-            --m-on-surface: #000000;
-            --m-surface-variant: #E0E0E0;
+            --sys-color-primary: #0d6efd;
+            --sys-color-on-primary: #ffffff;
+            --sys-color-primary-container: #cfe2ff;
+            --sys-color-on-primary-container: #001d36;
+            --sys-color-secondary: #565f71;
+            --sys-color-on-secondary: #ffffff;
+            --sys-color-secondary-container: #dae2f9;
+            --sys-color-on-secondary-container: #131c2b;
+            --sys-color-tertiary: #d63384;
+            --sys-color-on-tertiary: #ffffff;
+            --sys-color-tertiary-container: #ffd7ec;
+            --sys-color-on-tertiary-container: #30001f;
+            --sys-color-surface: #fefbff;
+            --sys-color-on-surface: #1b1b1f;
+            --sys-color-surface-variant: #e1e2ec;
+            --sys-color-on-surface-variant: #44474f;
+            --sys-color-outline: #74777f;
+            --sys-color-shadow: #000000;
+            --sys-color-surface-container-highest: #e6e0e9;
         }
 
         .livechat-container {
@@ -56,8 +68,8 @@
             position: fixed;
             bottom: 20vh;
             right: 24px;
-            background: var(--m-primary);
-            color: var(--m-on-primary);
+            background: var(--sys-color-primary);
+            color: var(--sys-color-on-primary);
             border: none;
             border-radius: 16px;
             padding: 16px 24px;
@@ -67,7 +79,6 @@
             cursor: pointer;
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(8px);
             z-index: 10001;
             display: flex !important;
             align-items: center;
@@ -79,7 +90,7 @@
         .livechat-fab:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-            background: var(--m-primary-dark);
+            background: var(--sys-color-secondary);
         }
 
         .livechat-modal {
@@ -89,7 +100,6 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
             display: none;
             align-items: center;
             justify-content: center;
@@ -101,7 +111,7 @@
         }
 
         .livechat-content {
-            background: var(--m-surface);
+            background: var(--sys-color-surface);
             border-radius: 24px;
             width: 400px;
             height: 600px;
@@ -111,12 +121,12 @@
             flex-direction: column;
             box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
             overflow: hidden;
-            border: 1px solid var(--m-surface-variant);
+            border: 1px solid var(--sys-color-outline);
         }
 
         .livechat-header {
-            background: var(--m-primary);
-            color: var(--m-on-primary);
+            background: var(--sys-color-primary);
+            color: var(--sys-color-on-primary);
             padding: 20px 24px;
             display: flex;
             justify-content: space-between;
@@ -141,7 +151,7 @@
             border-radius: 50%;
             width: 32px;
             height: 32px;
-            color: var(--m-on-primary);
+            color: var(--sys-color-on-primary);
             cursor: pointer;
             font-size: 18px;
             transition: background 0.2s;
@@ -158,9 +168,9 @@
             flex: 1;
             padding: 20px;
             overflow-y: auto;
-            background: var(--m-surface);
+            background: var(--sys-color-surface);
             scrollbar-width: thin;
-            scrollbar-color: var(--m-primary-dark) transparent;
+            scrollbar-color: var(--sys-color-primary) transparent;
         }
 
         .livechat-messages::-webkit-scrollbar {
@@ -168,7 +178,7 @@
         }
 
         .livechat-messages::-webkit-scrollbar-thumb {
-            background: var(--m-primary-dark);
+            background: var(--sys-color-primary);
             border-radius: 3px;
         }
 
@@ -180,36 +190,36 @@
         .message-author {
             font-size: 12px;
             font-weight: 600;
-            color: var(--m-primary-dark);
+            color: var(--sys-color-secondary);
             margin-bottom: 4px;
         }
 
         .message-content {
-            background: var(--m-on-primary);
+            background: var(--sys-color-surface-container-highest);
             padding: 14px 18px;
             border-radius: 16px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            border: 1px solid var(--m-surface-variant);
+            border: 1px solid var(--sys-color-surface-variant);
             font-size: 16px;
             line-height: 1.4;
-            color: var(--m-on-surface);
+            color: var(--sys-color-on-surface);
         }
 
         .message-content.own {
-            background: var(--m-primary);
-            color: var(--m-on-primary);
+            background: var(--sys-color-primary);
+            color: var(--sys-color-on-primary);
             margin-left: auto;
             max-width: 80%;
         }
 
         .message-content.own .message-author {
-            color: rgba(255, 255, 255, 0.9);
+            color: var(--sys-color-on-primary);
         }
 
         .livechat-input-area {
             padding: 16px 20px;
-            background: var(--m-on-primary);
-            border-top: 1px solid var(--m-surface-variant);
+            background: var(--sys-color-surface-container-highest);
+            border-top: 1px solid var(--sys-color-outline);
             display: flex;
             gap: 12px;
             align-items: flex-end;
@@ -217,7 +227,7 @@
 
         .livechat-input {
             flex: 1;
-            border: 2px solid var(--m-surface-variant);
+            border: 2px solid var(--sys-color-surface-variant);
             border-radius: 24px;
             padding: 12px 16px;
             font-size: 14px;
@@ -225,13 +235,13 @@
             resize: none;
             min-height: 20px;
             max-height: 80px;
-            background: var(--m-surface);
+            background: var(--sys-color-surface);
             transition: border-color 0.2s;
             outline: none;
         }
 
         .livechat-input:focus {
-            border-color: var(--m-primary);
+            border-color: var(--sys-color-primary);
         }
 
         .livechat-input:disabled {
@@ -240,12 +250,12 @@
         }
 
         .livechat-send {
-            background: var(--m-primary);
+            background: var(--sys-color-primary);
             border: none;
             border-radius: 50%;
             width: 44px;
             height: 44px;
-            color: var(--m-on-primary);
+            color: var(--sys-color-on-primary);
             cursor: pointer;
             font-size: 16px;
             transition: all 0.2s;
@@ -257,7 +267,7 @@
         .livechat-send:hover:not(:disabled) {
             transform: scale(1.05);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            background: var(--m-primary-dark);
+            background: var(--sys-color-secondary);
         }
 
         .livechat-send:disabled {
@@ -279,7 +289,7 @@
             font-size: 10px;
             opacity: 0.6;
             margin-top: 4px;
-            color: #666;
+            color: var(--sys-color-on-surface-variant);
         }
 
         .message-content.own .message-timestamp {
@@ -289,19 +299,19 @@
         .loading-indicator, .info-message {
             text-align: center;
             padding: 20px;
-            color: #666;
+            color: var(--sys-color-on-surface-variant);
         }
 
         .info-message {
-            background: var(--m-primary-light);
+            background: var(--sys-color-primary-container);
             border-radius: 12px;
             margin: 16px;
-            border: 1px solid var(--m-surface-variant);
+            border: 1px solid var(--sys-color-outline);
         }
 
         .info-message i {
             font-size: 24px;
-            color: var(--m-primary-dark);
+            color: var(--sys-color-primary);
             margin-bottom: 8px;
             display: block;
         }
