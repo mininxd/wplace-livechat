@@ -156,7 +156,7 @@
 
         .livechat-messages {
             flex: 1;
-            padding: 16px;
+            padding: 20px;
             overflow-y: auto;
             background: var(--m-surface);
             scrollbar-width: thin;
@@ -179,18 +179,18 @@
 
         .message-author {
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 600;
             color: var(--m-primary-dark);
             margin-bottom: 4px;
         }
 
         .message-content {
             background: var(--m-on-primary);
-            padding: 12px 16px;
+            padding: 14px 18px;
             border-radius: 16px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             border: 1px solid var(--m-surface-variant);
-            font-size: 14px;
+            font-size: 16px;
             line-height: 1.4;
             color: var(--m-on-surface);
         }
