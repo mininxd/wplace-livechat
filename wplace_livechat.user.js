@@ -380,11 +380,8 @@
                     if (debug) console.log("Region data fetched successfully:", regionData);
                     if (regionDataPoller) clearInterval(regionDataPoller);
 
-                    // Update UI if chat is open
-                    if (modal.classList.contains('show')) {
-                        updateUserInfo();
-                        loadMessages();
-                    }
+                    // Dispatch a custom event to notify the rest of the script
+                    document.dispatchEvent(new CustomEvent('regionDataFound'));
                 }
             } catch (error) {
                 if (debug) console.error("Error fetching region data from performance entry:", error);
@@ -397,6 +394,13 @@
             regionDataPoller = setInterval(checkForPixelUrl, 1000);
         }
     }
+
+    document.addEventListener('regionDataFound', () => {
+        if (modal.classList.contains('show')) {
+            updateUserInfo();
+            loadMessages();
+        }
+    });
 
     // API functions
     const API_BASE = 'https://wplace-live-chat-server.vercel.app';

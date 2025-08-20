@@ -1,9 +1,10 @@
 name: Build and Release Userscript
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -11,10 +12,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '16'
 
@@ -30,15 +31,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.run_number }}
+          tag_name: v${{ github.run_number }}
           release_name: Build ${{ github.run_number }}
-          body: |
-            ${{ github.event.head_commit.message }}
+          body: ${{ github.event.head_commit.message || 'Manual build' }}
           draft: false
           prerelease: false
 
       - name: Upload Release Asset
-        id: upload-release-asset
+        id: upload_release_asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
