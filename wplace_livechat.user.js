@@ -1,5 +1,19 @@
+// ==UserScript==
+// @name         Wplace Live Chats
+// @version      1.0
+// @description  Livechat for wplace.live
+// @author       mininxd
+// @match        https://wplace.live/*
+// @match        https://wplace.live
+// @grant        GM_xmlhttpRequest
+// @connect      wplace-live-chat-server.vercel.app
+// @connect      backend.wplace.live
+// ==/UserScript==
+
 (function() {
     'use strict';
+
+    const debug = true;
 
     // Load external resources
     const loadCSS = (href) => {
@@ -20,8 +34,18 @@
     loadCSS('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap');
     loadCSS('https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css');
 
-    // Create styles with Google Blue colors
+    // Create styles with Material You colors
     const styles = `
+        :root {
+            --m-primary: #2196F3;
+            --m-primary-dark: #1976D2;
+            --m-primary-light: #E3F2FD;
+            --m-on-primary: #ffffff;
+            --m-surface: #F8F9FA;
+            --m-on-surface: #000000;
+            --m-surface-variant: #E0E0E0;
+        }
+
         .livechat-container {
             font-family: 'Rubik', system-ui, -apple-system, sans-serif;
             position: fixed;
@@ -32,8 +56,8 @@
             position: fixed;
             bottom: 20vh;
             right: 24px;
-            background: #1976D2;
-            color: white;
+            background: var(--m-primary);
+            color: var(--m-on-primary);
             border: none;
             border-radius: 16px;
             padding: 16px 24px;
@@ -41,7 +65,7 @@
             font-weight: 500;
             letter-spacing: 0.1px;
             cursor: pointer;
-            box-shadow: 0 6px 16px rgba(25, 118, 210, 0.3);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             backdrop-filter: blur(8px);
             z-index: 10001;
@@ -54,8 +78,8 @@
 
         .livechat-fab:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(25, 118, 210, 0.4);
-            background: #1565C0;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            background: var(--m-primary-dark);
         }
 
         .livechat-modal {
@@ -77,7 +101,7 @@
         }
 
         .livechat-content {
-            background: #F8F9FA;
+            background: var(--m-surface);
             border-radius: 24px;
             width: 400px;
             height: 600px;
@@ -85,14 +109,14 @@
             max-height: 90vh;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 24px 48px rgba(25, 118, 210, 0.2);
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
             overflow: hidden;
-            border: 1px solid rgba(25, 118, 210, 0.1);
+            border: 1px solid var(--m-surface-variant);
         }
 
         .livechat-header {
-            background: #1976D2;
-            color: white;
+            background: var(--m-primary);
+            color: var(--m-on-primary);
             padding: 20px 24px;
             display: flex;
             justify-content: space-between;
@@ -117,7 +141,7 @@
             border-radius: 50%;
             width: 32px;
             height: 32px;
-            color: white;
+            color: var(--m-on-primary);
             cursor: pointer;
             font-size: 18px;
             transition: background 0.2s;
@@ -134,9 +158,9 @@
             flex: 1;
             padding: 16px;
             overflow-y: auto;
-            background: #F8F9FA;
+            background: var(--m-surface);
             scrollbar-width: thin;
-            scrollbar-color: rgba(25, 118, 210, 0.3) transparent;
+            scrollbar-color: var(--m-primary-dark) transparent;
         }
 
         .livechat-messages::-webkit-scrollbar {
@@ -144,7 +168,7 @@
         }
 
         .livechat-messages::-webkit-scrollbar-thumb {
-            background: rgba(25, 118, 210, 0.3);
+            background: var(--m-primary-dark);
             border-radius: 3px;
         }
 
@@ -156,23 +180,24 @@
         .message-author {
             font-size: 12px;
             font-weight: 500;
-            color: #1976D2;
+            color: var(--m-primary-dark);
             margin-bottom: 4px;
         }
 
         .message-content {
-            background: white;
+            background: var(--m-on-primary);
             padding: 12px 16px;
             border-radius: 16px;
-            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.1);
-            border: 1px solid rgba(25, 118, 210, 0.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--m-surface-variant);
             font-size: 14px;
             line-height: 1.4;
+            color: var(--m-on-surface);
         }
 
         .message-content.own {
-            background: #1976D2;
-            color: white;
+            background: var(--m-primary);
+            color: var(--m-on-primary);
             margin-left: auto;
             max-width: 80%;
         }
@@ -183,8 +208,8 @@
 
         .livechat-input-area {
             padding: 16px 20px;
-            background: white;
-            border-top: 1px solid rgba(25, 118, 210, 0.1);
+            background: var(--m-on-primary);
+            border-top: 1px solid var(--m-surface-variant);
             display: flex;
             gap: 12px;
             align-items: flex-end;
@@ -192,7 +217,7 @@
 
         .livechat-input {
             flex: 1;
-            border: 2px solid rgba(25, 118, 210, 0.2);
+            border: 2px solid var(--m-surface-variant);
             border-radius: 24px;
             padding: 12px 16px;
             font-size: 14px;
@@ -200,13 +225,13 @@
             resize: none;
             min-height: 20px;
             max-height: 80px;
-            background: #F8F9FA;
+            background: var(--m-surface);
             transition: border-color 0.2s;
             outline: none;
         }
 
         .livechat-input:focus {
-            border-color: #1976D2;
+            border-color: var(--m-primary);
         }
 
         .livechat-input:disabled {
@@ -215,12 +240,12 @@
         }
 
         .livechat-send {
-            background: #1976D2;
+            background: var(--m-primary);
             border: none;
             border-radius: 50%;
             width: 44px;
             height: 44px;
-            color: white;
+            color: var(--m-on-primary);
             cursor: pointer;
             font-size: 16px;
             transition: all 0.2s;
@@ -231,8 +256,8 @@
 
         .livechat-send:hover:not(:disabled) {
             transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
-            background: #1565C0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            background: var(--m-primary-dark);
         }
 
         .livechat-send:disabled {
@@ -268,15 +293,15 @@
         }
 
         .info-message {
-            background: #E3F2FD;
+            background: var(--m-primary-light);
             border-radius: 12px;
             margin: 16px;
-            border: 1px solid rgba(25, 118, 210, 0.1);
+            border: 1px solid var(--m-surface-variant);
         }
 
         .info-message i {
             font-size: 24px;
-            color: #1976D2;
+            color: var(--m-primary-dark);
             margin-bottom: 8px;
             display: block;
         }
@@ -330,83 +355,47 @@
     let regionData = null;
     let lastPixelUrl = null;
 
-    // --- Robust Request Interception ---
+    // --- Data Fetching via Performance Entries ---
+    let regionDataPoller = null;
+    let lastCheckedUrl = '';
 
-    function handlePixelData(pixelData) {
-        console.log("Pixel data received:", pixelData);
-        if (pixelData && pixelData.region && pixelData.region.name) {
-            regionData = pixelData.region;
-            console.log("Region data captured:", regionData);
+    async function checkForPixelUrl() {
+        if (regionData) {
+            if (regionDataPoller) clearInterval(regionDataPoller);
+            return;
+        }
 
-            // Update UI if chat is open
-            if (modal.classList.contains('show')) {
-                updateUserInfo();
-                loadMessages();
+        const resources = performance.getEntriesByType("resource");
+        const pixelResource = resources.reverse().find(r => r.name.includes("https://backend.wplace.live/s0/pixel/"));
+
+        if (pixelResource && pixelResource.name !== lastCheckedUrl) {
+            lastCheckedUrl = pixelResource.name;
+            const url = lastCheckedUrl.split('?')[0];
+            if (debug) console.log("Found pixel URL in performance entries:", url);
+
+            try {
+                const data = await fetchAPI(url);
+                if (data && data.region && data.region.name) {
+                    regionData = data.region;
+                    if (debug) console.log("Region data fetched successfully:", regionData);
+                    if (regionDataPoller) clearInterval(regionDataPoller);
+
+                    // Update UI if chat is open
+                    if (modal.classList.contains('show')) {
+                        updateUserInfo();
+                        loadMessages();
+                    }
+                }
+            } catch (error) {
+                if (debug) console.error("Error fetching region data from performance entry:", error);
             }
-        } else {
-            console.log("No region data in pixel response");
         }
     }
 
-    // 1. Intercept fetch
-    const originalFetch = window.fetch;
-    window.fetch = async function(...args) {
-        const url = args[0] instanceof Request ? args[0].url : args[0];
-        const result = await originalFetch.apply(this, args);
-
-        if (typeof url === "string" && url.includes("https://backend.wplace.live/s0/pixel")) {
-            lastPixelUrl = url.split("?")[0];
-            console.log("Detected pixel URL via fetch:", lastPixelUrl);
-
-            try {
-                const clonedResponse = result.clone();
-                const pixelData = await clonedResponse.json();
-                handlePixelData(pixelData);
-            } catch (e) {
-                console.error("Error processing pixel data from fetch:", e);
-            }
+    function startDataPolling() {
+        if (!regionDataPoller) {
+            regionDataPoller = setInterval(checkForPixelUrl, 1000);
         }
-        return result;
-    };
-
-    // 2. Intercept XMLHttpRequest
-    const originalXhrOpen = XMLHttpRequest.prototype.open;
-    const originalXhrSend = XMLHttpRequest.prototype.send;
-
-    XMLHttpRequest.prototype.open = function(method, url, ...rest) {
-        this._url = url; // Store url for later use in send
-        return originalXhrOpen.apply(this, [method, url, ...rest]);
-    };
-
-    XMLHttpRequest.prototype.send = function(...args) {
-        this.addEventListener('load', function() {
-            if (typeof this._url === "string" && this._url.includes("https://backend.wplace.live/s0/pixel")) {
-                lastPixelUrl = this._url.split("?")[0];
-                 console.log("Detected pixel URL via XHR:", lastPixelUrl);
-                try {
-                    const pixelData = JSON.parse(this.responseText);
-                    handlePixelData(pixelData);
-                } catch (e) {
-                    console.error("Error processing pixel data from XHR:", e);
-                }
-            }
-        });
-        return originalXhrSend.apply(this, args);
-    };
-
-    // This function is kept for cases where the chat is opened after a pixel URL was detected
-    async function fetchRegionFromPixel() {
-        if (lastPixelUrl && !regionData) { // Only fetch if we don't have region data yet
-            try {
-                console.log("Manually fetching region from previously detected URL:", lastPixelUrl);
-                const pixelData = await fetchAPI(lastPixelUrl);
-                handlePixelData(pixelData); // Use the central handler
-                return !!regionData;
-            } catch (e) {
-                console.error("Error manually fetching pixel data:", e);
-            }
-        }
-        return false;
     }
 
     // API functions
@@ -547,12 +536,12 @@
         try {
             userData = await fetchAPI('https://backend.wplace.live/me');
             if (userData) {
-                console.log("User data loaded:", userData);
+                if (debug) console.log("User data loaded:", userData);
                 updateUserInfo();
                 return true;
             }
         } catch (error) {
-            console.error('Error loading user data:', error);
+            if (debug) console.error('Error loading user data:', error);
         }
         return false;
     }
@@ -586,14 +575,8 @@
 
     // Load and display messages
     async function loadMessages() {
-        // Try to fetch region data if we don't have it but have a pixel URL
-        if (!regionData && lastPixelUrl) {
-            console.log("No region data, trying to fetch from pixel URL...");
-            await fetchRegionFromPixel();
-        }
-
         if (!regionData) {
-            console.log("Still no region data available");
+            if (debug) console.log("Still no region data available");
             chatMessages.innerHTML = `
                 <div class="info-message">
                     <i class="ri-cursor-line"></i>
@@ -621,7 +604,7 @@
         }
 
         try {
-            console.log("Loading messages for region:", regionData.name);
+            if (debug) console.log("Loading messages for region:", regionData.name);
             chatMessages.innerHTML = `
                 <div class="loading-indicator">
                     <i class="ri-loader-4-line loading-spinner"></i> Loading messages for ${regionData.name}...
@@ -632,12 +615,12 @@
             chatMessages.innerHTML = '';
 
             if (response && response.data && response.data.length > 0) {
-                console.log(`Loaded ${response.data.length} messages for ${regionData.name}`);
+                if (debug) console.log(`Loaded ${response.data.length} messages for ${regionData.name}`);
                 response.data.forEach(msg => {
                     addMessageToChat(msg.name, msg.messages, msg.createdAt, msg.uid === userData.id.toString());
                 });
             } else {
-                console.log("No messages found for region:", regionData.name);
+                if (debug) console.log("No messages found for region:", regionData.name);
                 chatMessages.innerHTML = `
                     <div class="info-message">
                         <i class="ri-chat-new-line"></i>
@@ -651,7 +634,7 @@
             chatInput.disabled = false;
             sendButton.disabled = false;
         } catch (error) {
-            console.error('Error loading messages:', error);
+            if (debug) console.error('Error loading messages:', error);
             chatMessages.innerHTML = `
                 <div class="info-message">
                     <i class="ri-error-warning-line"></i>
@@ -717,7 +700,7 @@
             }, 1000);
 
         } catch (error) {
-            console.error('Error sending message:', error);
+            if (debug) console.error('Error sending message:', error);
             // Show error message
             const errorTime = new Date().toISOString();
             addMessageToChat('System', 'Failed to send message. Please try again.', errorTime, false);
@@ -754,9 +737,9 @@
         loadJS('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js', () => {
             loadJS('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/Draggable.min.js', () => {
                 gsap.registerPlugin(Draggable);
-                Draggable.create(".livechat-content", {
-                    trigger: ".livechat-header",
-                    bounds: "body"
+                Draggable.create(".livechat-fab", {
+                    bounds: "body",
+                    allowEventDefault: true
                 });
             });
         });
@@ -807,6 +790,7 @@
     // Initialize on page load
     setTimeout(() => {
         initializeUserData();
+        startDataPolling();
     }, 2000);
 
 })();
