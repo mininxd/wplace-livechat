@@ -14,6 +14,9 @@ export default defineConfig({
         grant: 'GM_xmlhttpRequest',
         connect: ['wplace-live-chat-server.vercel.app', 'backend.wplace.live'],
       },
+      build: {
+        fileName: 'wplace_livechat.user.js',
+      },
     }),
   ],
 });
