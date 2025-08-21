@@ -714,6 +714,7 @@
 
     // Load and display messages
     async function loadMessages() {
+        const initialChatRoom = currentChatRoom;
         let chatRoomId = null;
         let chatRoomName = '';
         const messagesContainer = currentChatRoom === 'region' ? regionMessages : allianceMessages;
@@ -777,6 +778,11 @@
             }
 
             const response = await fetchMessages(chatRoomId);
+
+            if (currentChatRoom !== initialChatRoom) {
+                if (debug) console.log(`Room changed from ${initialChatRoom} to ${currentChatRoom}. Aborting message load.`);
+                return;
+            }
 
             if (isInitialLoad) {
                 messagesContainer.innerHTML = ''; // Clear loading indicator
