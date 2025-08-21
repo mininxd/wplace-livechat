@@ -371,48 +371,44 @@
             }
         }
 
-        .google-loader {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            height: 40px;
+        .m3-progress-bar {
+            position: relative;
+            width: 100%;
+            height: 4px;
+            background-color: var(--sys-color-surface-variant);
+            border-radius: 2px;
+            overflow: hidden;
         }
 
-        .google-loader-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            animation: google-loader-bounce 1.4s infinite ease-in-out both;
+        .m3-progress-bar::before, .m3-progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background-color: var(--sys-color-primary);
+            border-radius: 2px;
         }
 
-        .google-loader-dot:nth-child(1) {
-            background-color: #4285F4; /* Blue */
-            animation-delay: -0.32s;
+        .m3-progress-bar::before {
+            animation: m3-progress-anim-short 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
         }
 
-        .google-loader-dot:nth-child(2) {
-            background-color: #EA4335; /* Red */
-            animation-delay: -0.16s;
+        .m3-progress-bar::after {
+            animation: m3-progress-anim-long 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
+            animation-delay: 1.15s;
         }
 
-        .google-loader-dot:nth-child(3) {
-            background-color: #FBBC05; /* Yellow */
-            animation-delay: 0s;
+        @keyframes m3-progress-anim-short {
+            0%   { left: -100%; width: 100%; }
+            40%  { left: 0%; width: 50%; }
+            100% { left: 100%; width: 25%; }
         }
 
-        .google-loader-dot:nth-child(4) {
-            background-color: #34A853; /* Green */
-            animation-delay: 0.16s;
-        }
-
-        @keyframes google-loader-bounce {
-            0%, 80%, 100% {
-                transform: scale(0);
-            }
-            40% {
-                transform: scale(1.0);
-            }
+        @keyframes m3-progress-anim-long {
+            0%   { left: -200%; width: 100%; }
+            60%  { left: 107%; width: 40%; }
+            100% { left: 107%; width: 40%; }
         }
 
         @media (max-width: 480px) {
@@ -442,6 +438,7 @@
     // Global state
     let userData = null;
     let regionData = null;
+    let allianceData = null;
     let lastPixelUrl = null;
     let currentChatRoom = 'region'; // 'region' or 'alliance'
 
@@ -602,24 +599,14 @@
             </div>
             <div class="livechat-messages" id="region-messages">
                 <div class="loading-indicator">
-                    <div class="google-loader">
-                        <div class="google-loader-dot"></div>
-                        <div class="google-loader-dot"></div>
-                        <div class="google-loader-dot"></div>
-                        <div class="google-loader-dot"></div>
-                    </div>
-                    <div>Loading...</div>
+                    <div class="m3-progress-bar" style="width: 50%; margin: 0 auto;"></div>
+                    <div style="margin-top: 8px;">Loading...</div>
                 </div>
             </div>
             <div class="livechat-messages" id="alliance-messages" style="display: none;">
                  <div class="loading-indicator">
-                    <div class="google-loader">
-                        <div class="google-loader-dot"></div>
-                        <div class="google-loader-dot"></div>
-                        <div class="google-loader-dot"></div>
-                        <div class="google-loader-dot"></div>
-                    </div>
-                    <div>Loading...</div>
+                    <div class="m3-progress-bar" style="width: 50%; margin: 0 auto;"></div>
+                    <div style="margin-top: 8px;">Loading...</div>
                 </div>
             </div>
             <div class="livechat-input-area">
@@ -654,6 +641,16 @@
             userData = await fetchAPI('https://backend.wplace.live/me');
             if (userData) {
                 if (debug) console.log("User data loaded:", userData);
+
+                if (userData.allianceId) {
+                    try {
+                        allianceData = await fetchAPI(`https://backend.wplace.live/alliance/${userData.allianceId}`);
+                        if (allianceData && debug) console.log("Alliance data loaded:", allianceData);
+                    } catch (error) {
+                        if (debug) console.error('Error loading alliance data:', error);
+                    }
+                }
+
                 updateUserInfo();
                 return true;
             }
@@ -667,7 +664,14 @@
     function updateUserInfo() {
         if (userData) {
             let regionName = regionData ? regionData.name : "No region";
-            let allianceName = userData.allianceId ? `Alliance` : "";
+            let allianceName = ''; // Default to empty string if not in alliance
+            if (userData.allianceId) {
+                if (allianceData && allianceData.name) {
+                    allianceName = `Alliance: ${allianceData.name} (${allianceData.members} members)`;
+                } else {
+                    allianceName = `Alliance`; // Fallback while loading
+                }
+            }
 
             userInfo.innerHTML = `
                 <h3><i class="ri-user-line"></i> ${userData.name} <span style="font-weight: 300;">#${userData.id}</span></h3>
@@ -759,13 +763,8 @@
                 if (debug) console.log(`Initial load of messages for ${chatRoomName}`);
                 messagesContainer.innerHTML = `
                     <div class="loading-indicator">
-                        <div class="google-loader">
-                            <div class="google-loader-dot"></div>
-                            <div class="google-loader-dot"></div>
-                            <div class="google-loader-dot"></div>
-                            <div class="google-loader-dot"></div>
-                        </div>
-                        <div>Loading messages for ${chatRoomName}...</div>
+                        <div class="m3-progress-bar" style="width: 50%; margin: 0 auto;"></div>
+                        <div style="margin-top: 8px;">Loading messages for ${chatRoomName}...</div>
                     </div>
                 `;
             }
