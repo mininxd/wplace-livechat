@@ -350,7 +350,7 @@ export async function handleSendMessage() {
     const regionData = getRegionData();
     const currentChatRoom = getCurrentChatRoom();
 
-    if (!userData) return;
+    if (!userData || sendButton.disabled) return;
 
     let chatRoomId: string | null = null;
     if (currentChatRoom === 'region') {
@@ -372,31 +372,48 @@ export async function handleSendMessage() {
     const message = chatInput.value.trim();
     if (!message) return;
 
-    // Disable send button
+    // Disable inputs to prevent spam/double-sends
     sendButton.disabled = true;
+    chatInput.disabled = true;
     sendButton.innerHTML = '<i class="material-icons loading-spinner">sync</i>';
 
     try {
-        // Clear input
+        await sendMessage(userData.id, userData.name, message, chatRoomId);
+
+        // Clear input after successful send
         chatInput.value = '';
         chatInput.style.height = 'auto';
 
-        // Send to server
-        await sendMessage(userData.id, userData.name, message, chatRoomId);
+        // Refresh messages to show the sent message
+        setTimeout(loadMessages, 1000);
 
-        // Refresh messages after a short delay to get the actual server response
-        setTimeout(() => {
-            loadMessages();
+        // Start 3-second cooldown
+        let countdown = 3;
+        sendButton.innerHTML = `<span style="font-size: 14px; font-weight: 500;">${countdown}</span>`;
+        chatInput.placeholder = `Please wait ${countdown} seconds...`;
+
+        const interval = setInterval(() => {
+            countdown--;
+            if (countdown > 0) {
+                sendButton.innerHTML = `<span style="font-size: 14px; font-weight: 500;">${countdown}</span>`;
+                chatInput.placeholder = `Please wait ${countdown} seconds...`;
+            } else {
+                clearInterval(interval);
+                sendButton.disabled = false;
+                chatInput.disabled = false;
+                sendButton.innerHTML = '<i class="material-icons">send</i>';
+                chatInput.placeholder = 'Type your message...';
+                chatInput.focus();
+            }
         }, 1000);
 
     } catch (error) {
         if (debug) console.error('Error sending message:', error);
-        // Show error message
-        const errorTime = new Date().toISOString();
-        addMessageToChat('System', 'Failed to send message. Please try again.', errorTime, false);
-    } finally {
-        // Re-enable send button
+        addMessageToChat('System', 'Failed to send message. Please try again.', new Date().toISOString(), false);
+
+        // On error, re-enable immediately
         sendButton.disabled = false;
+        chatInput.disabled = false;
         sendButton.innerHTML = '<i class="material-icons">send</i>';
     }
 }
