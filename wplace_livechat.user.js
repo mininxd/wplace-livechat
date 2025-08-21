@@ -32,7 +32,7 @@
 
     // Load Rubik font and Remix Icons
     loadCSS('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap');
-    loadCSS('https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css');
+    loadCSS('https://fonts.googleapis.com/icon?family=Material+Icons');
 
     // Create styles with Material You colors
     const styles = `
@@ -403,6 +403,19 @@
             }
         }
 
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+
         @media (max-width: 480px) {
             .livechat-content {
                 width: 100%;
@@ -552,7 +565,7 @@
     // Create floating action button
     const fab = document.createElement('button');
     fab.className = 'livechat-fab';
-    fab.innerHTML = '<i class="ri-chat-3-line"></i> Live Chat';
+    fab.innerHTML = '<i class="material-icons">chat</i> Live Chat';
     fab.style.display = 'flex';
     fab.style.visibility = 'visible';
     fab.style.opacity = '1';
@@ -579,12 +592,12 @@
             <div class="livechat-header">
                 <div class="livechat-header-main">
                     <div class="livechat-user-info" id="userInfo">
-                        <h3><i class="ri-user-line"></i> Loading...</h3>
-                        <div class="livechat-user-details"><i class="ri-hashtag"></i> ID: ...</div>
-                        <div class="livechat-user-details"><i class="ri-map-pin-line"></i> Region: ...</div>
-                        <div class="game-status"><i class="ri-circle-fill" style="color: #4CAF50; font-size: 8px;"></i> Online</div>
+                        <h3><i class="material-icons">person</i> Loading...</h3>
+                        <div class="livechat-user-details"><i class="material-icons">tag</i> ID: ...</div>
+                        <div class="livechat-user-details"><i class="material-icons">place</i> Region: ...</div>
+                        <div class="game-status"><i class="material-icons" style="color: #4CAF50; font-size: 8px;">circle</i> Online</div>
                     </div>
-                    <button class="livechat-close"><i class="ri-close-line"></i></button>
+                    <button class="livechat-close"><i class="material-icons">close</i></button>
                 </div>
                 <div class="livechat-tabs" id="chatTabs">
                     </div>
@@ -603,7 +616,7 @@
             </div>
             <div class="livechat-input-area">
                 <textarea class="livechat-input" placeholder="Type your message..." rows="1" id="chatInput" disabled></textarea>
-                <button class="livechat-send" id="sendButton" disabled><i class="ri-send-plane-fill"></i></button>
+                <button class="livechat-send" id="sendButton" disabled><i class="material-icons">send</i></button>
             </div>
         </div>
     `;
@@ -667,11 +680,11 @@
                 if(allianceData.role) details.push(`Role: ${allianceData.role}`);
 
                 if(details.length > 0) {
-                    allianceDetails += `<div class="livechat-user-details"><i class="ri-group-line"></i> ${details.join(' &bull; ')}</div>`;
+                    allianceDetails += `<div class="livechat-user-details"><i class="material-icons">group</i> ${details.join(' &bull; ')}</div>`;
                 }
 
                 if(allianceData.description){
-                    allianceDetails += `<div class="livechat-user-details" style="font-style: italic; opacity: 0.8;"><i class="ri-information-line"></i> ${allianceData.description}</div>`;
+                    allianceDetails += `<div class="livechat-user-details" style="font-style: italic; opacity: 0.8;"><i class="material-icons">info</i> ${allianceData.description}</div>`;
                 }
             } else if (userData.allianceId) {
                 allianceName = `Alliance`; // Fallback while loading
@@ -680,16 +693,16 @@
             let chatContextInfo = currentChatRoom === 'region' ? `Region: ${regionName}` : allianceName;
 
             userInfo.innerHTML = `
-                <h3><i class="ri-user-line"></i> ${userData.name} <span style="font-weight: 300;">#${userData.id}</span></h3>
-                <div class="livechat-user-details"><i class="ri-map-pin-line"></i> ${chatContextInfo}</div>
+                <h3><i class="material-icons">person</i> ${userData.name} <span style="font-weight: 300;">#${userData.id}</span></h3>
+                <div class="livechat-user-details"><i class="material-icons">place</i> ${chatContextInfo}</div>
                 ${allianceDetails}
-                <div class="game-status"><i class="ri-circle-fill" style="color: #4CAF50; font-size: 8px;"></i> Level ${Math.floor(userData.level)}</div>
+                <div class="game-status"><i class="material-icons" style="color: #4CAF50; font-size: 8px;">circle</i> Level ${Math.floor(userData.level)}</div>
             `;
         } else {
             userInfo.innerHTML = `
-                <h3><i class="ri-user-line"></i> Loading...</h3>
-                <div class="livechat-user-details"><i class="ri-map-pin-line"></i> Region: ...</div>
-                <div class="game-status"><i class="ri-circle-fill" style="color: #FF9800; font-size: 8px;"></i> Loading</div>
+                <h3><i class="material-icons">person</i> Loading...</h3>
+                <div class="livechat-user-details"><i class="material-icons">place</i> Region: ...</div>
+                <div class="game-status"><i class="material-icons" style="color: #FF9800; font-size: 8px;">circle</i> Loading</div>
             `;
         }
 
@@ -724,7 +737,7 @@
                 if (debug) console.log("Still no region data available for region chat");
                 messagesContainer.innerHTML = `
                     <div class="info-message">
-                        <i class="ri-cursor-line"></i>
+                        <i class="material-icons">near_me</i>
                         <div><strong>Tap on a pixel to join a region's chat</strong></div>
                         <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Click on any pixel on the canvas to join the regional chat for that area.</div>
                     </div>
@@ -739,7 +752,7 @@
             if (!userData || !userData.allianceId) {
                  messagesContainer.innerHTML = `
                     <div class="info-message">
-                        <i class="ri-error-warning-line"></i>
+                        <i class="material-icons">warning</i>
                         <div><strong>You are not in an alliance.</strong></div>
                     </div>
                 `;
@@ -754,7 +767,7 @@
         if (!userData) {
             messagesContainer.innerHTML = `
                 <div class="info-message">
-                    <i class="ri-error-warning-line"></i>
+                    <i class="material-icons">warning</i>
                     <div><strong>Please log in to use chat</strong></div>
                     <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">You need to be logged in to participate in chat.</div>
                 </div>
@@ -795,7 +808,7 @@
                     if (debug) console.log(`No messages found for ${chatRoomName}`);
                     messagesContainer.innerHTML = `
                         <div class="info-message">
-                            <i class="ri-chat-new-line"></i>
+                            <i class="material-icons">chat</i>
                             <div><strong>Welcome to ${chatRoomName} chat!</strong></div>
                             <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Be the first to start the conversation.</div>
                         </div>
@@ -825,7 +838,7 @@
             if (isInitialLoad) {
                 messagesContainer.innerHTML = `
                     <div class="info-message">
-                        <i class="ri-error-warning-line"></i>
+                        <i class="material-icons">warning</i>
                         <div><strong>Failed to load messages</strong></div>
                         <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Please check your connection and try again.</div>
                     </div>
@@ -891,7 +904,7 @@
 
         // Disable send button
         sendButton.disabled = true;
-        sendButton.innerHTML = '<i class="ri-loader-4-line loading-spinner"></i>';
+        sendButton.innerHTML = '<i class="material-icons loading-spinner">sync</i>';
 
         try {
             // Clear input
@@ -914,7 +927,7 @@
         } finally {
             // Re-enable send button
             sendButton.disabled = false;
-            sendButton.innerHTML = '<i class="ri-send-plane-fill"></i>';
+            sendButton.innerHTML = '<i class="material-icons">send</i>';
         }
     }
 
