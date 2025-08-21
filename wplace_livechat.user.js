@@ -72,20 +72,22 @@
             background: var(--sys-color-primary);
             color: var(--sys-color-on-primary);
             border: none;
-            border-radius: 16px;
-            padding: 16px 24px;
-            font-size: 14px;
-            font-weight: 500;
-            letter-spacing: 0.1px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
             cursor: pointer;
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 10001;
             display: flex !important;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
             visibility: visible !important;
             opacity: 1 !important;
+        }
+
+        .livechat-fab .material-icons {
+            font-size: 24px;
         }
 
         .livechat-fab:hover {
@@ -174,6 +176,12 @@
             margin: 0 0 4px 0;
             font-size: 18px;
             font-weight: 500;
+        }
+
+        .livechat-user-info .material-icons {
+            font-size: 16px;
+            vertical-align: -3px;
+            margin-right: 4px;
         }
 
         .livechat-user-details {
@@ -565,7 +573,7 @@
     // Create floating action button
     const fab = document.createElement('button');
     fab.className = 'livechat-fab';
-    fab.innerHTML = '<i class="material-icons">chat</i> Live Chat';
+    fab.innerHTML = '<i class="material-icons">chat</i>';
     fab.style.display = 'flex';
     fab.style.visibility = 'visible';
     fab.style.opacity = '1';
