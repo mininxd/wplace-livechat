@@ -127,10 +127,46 @@
         .livechat-header {
             background: var(--sys-color-primary);
             color: var(--sys-color-on-primary);
-            padding: 20px 24px;
+            padding: 12px 24px 0;
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px solid var(--sys-color-outline);
+        }
+
+        .livechat-header-main {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
+            width: 100%;
+            padding-bottom: 12px;
+        }
+
+        .livechat-tabs {
+            display: flex;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            margin: 0 -24px;
+            padding: 0 12px;
+        }
+
+        .livechat-tab {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: var(--sys-color-on-primary);
+            opacity: 0.7;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .livechat-tab.active {
+            opacity: 1;
+            border-bottom-color: var(--sys-color-on-primary);
+        }
+
+        .livechat-tab:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .livechat-user-info h3 {
@@ -187,6 +223,7 @@
             animation: slideIn 0.3s ease-out;
             display: flex;
             flex-direction: column;
+            align-items: flex-start;
         }
 
         .chat-message.own {
@@ -371,6 +408,7 @@
     let userData = null;
     let regionData = null;
     let lastPixelUrl = null;
+    let currentChatRoom = 'region'; // 'region' or 'alliance'
 
     // --- Data Fetching via Performance Entries ---
     let regionDataPoller = null;
@@ -515,13 +553,17 @@
     modal.innerHTML = `
         <div class="livechat-content">
             <div class="livechat-header">
-                <div class="livechat-user-info" id="userInfo">
-                    <h3><i class="ri-user-line"></i> Loading...</h3>
-                    <div class="livechat-user-details"><i class="ri-hashtag"></i> ID: ...</div>
-                    <div class="livechat-user-details"><i class="ri-map-pin-line"></i> Region: ...</div>
-                    <div class="game-status"><i class="ri-circle-fill" style="color: #4CAF50; font-size: 8px;"></i> Online</div>
+                <div class="livechat-header-main">
+                    <div class="livechat-user-info" id="userInfo">
+                        <h3><i class="ri-user-line"></i> Loading...</h3>
+                        <div class="livechat-user-details"><i class="ri-hashtag"></i> ID: ...</div>
+                        <div class="livechat-user-details"><i class="ri-map-pin-line"></i> Region: ...</div>
+                        <div class="game-status"><i class="ri-circle-fill" style="color: #4CAF50; font-size: 8px;"></i> Online</div>
+                    </div>
+                    <button class="livechat-close"><i class="ri-close-line"></i></button>
                 </div>
-                <button class="livechat-close"><i class="ri-close-line"></i></button>
+                <div class="livechat-tabs" id="chatTabs">
+                    </div>
             </div>
             <div class="livechat-messages" id="chatMessages">
                 <div class="loading-indicator">
@@ -545,6 +587,7 @@
     const sendButton = document.getElementById('sendButton');
     const closeButton = modal.querySelector('.livechat-close');
     const userInfo = document.getElementById('userInfo');
+    const chatTabs = document.getElementById('chatTabs');
 
     // Auto-resize textarea
     chatInput.addEventListener('input', function() {
@@ -569,46 +612,77 @@
 
     // Add debug info to user info display
     function updateUserInfo() {
-        if (userData && regionData) {
+        if (userData) {
+            let regionName = regionData ? regionData.name : "No region";
+            let allianceName = userData.allianceId ? `Alliance` : "";
+
             userInfo.innerHTML = `
-                <h3><i class="ri-user-line"></i> ${userData.name}</h3>
-                <div class="livechat-user-details"><i class="ri-hashtag"></i> ID: ${userData.id}</div>
-                <div class="livechat-user-details"><i class="ri-map-pin-line"></i> Region: ${regionData.name}</div>
+                <h3><i class="ri-user-line"></i> ${userData.name} <span style="font-weight: 300;">#${userData.id}</span></h3>
+                <div class="livechat-user-details"><i class="ri-map-pin-line"></i> ${currentChatRoom === 'region' ? `Region: ${regionName}` : allianceName}</div>
                 <div class="game-status"><i class="ri-circle-fill" style="color: #4CAF50; font-size: 8px;"></i> Level ${Math.floor(userData.level)}</div>
-            `;
-        } else if (userData && !regionData) {
-            userInfo.innerHTML = `
-                <h3><i class="ri-user-line"></i> ${userData.name}</h3>
-                <div class="livechat-user-details"><i class="ri-hashtag"></i> ID: ${userData.id}</div>
-                <div class="livechat-user-details"><i class="ri-map-pin-line"></i> No region selected</div>
-                <div class="game-status"><i class="ri-circle-fill" style="color: #4CAF50; font-size: 8px;"></i> Level ${Math.floor(userData.level)}</div>
-                ${lastPixelUrl ? `<div style="font-size: 10px; opacity: 0.5; margin-top: 4px;">Pixel detected: ${lastPixelUrl.split('/').pop()}</div>` : ''}
             `;
         } else {
             userInfo.innerHTML = `
                 <h3><i class="ri-user-line"></i> Loading...</h3>
-                <div class="livechat-user-details"><i class="ri-hashtag"></i> ID: ...</div>
                 <div class="livechat-user-details"><i class="ri-map-pin-line"></i> Region: ...</div>
                 <div class="game-status"><i class="ri-circle-fill" style="color: #FF9800; font-size: 8px;"></i> Loading</div>
             `;
+        }
+
+        // Update tabs
+        chatTabs.innerHTML = '';
+        const regionTab = document.createElement('div');
+        regionTab.className = 'livechat-tab';
+        regionTab.textContent = 'Region';
+        regionTab.dataset.room = 'region';
+        if (currentChatRoom === 'region') regionTab.classList.add('active');
+        chatTabs.appendChild(regionTab);
+
+        if (userData && userData.allianceId) {
+            const allianceTab = document.createElement('div');
+            allianceTab.className = 'livechat-tab';
+            allianceTab.textContent = 'Alliance';
+            allianceTab.dataset.room = 'alliance';
+            if (currentChatRoom === 'alliance') allianceTab.classList.add('active');
+            chatTabs.appendChild(allianceTab);
         }
     }
 
     // Load and display messages
     async function loadMessages() {
-        if (!regionData) {
-            if (debug) console.log("Still no region data available");
-            chatMessages.innerHTML = `
-                <div class="info-message">
-                    <i class="ri-cursor-line"></i>
-                    <div><strong>Tap on a pixel first to enter chat rooms</strong></div>
-                    <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Click on any pixel on the canvas to join the regional chat for that area.</div>
-                    ${lastPixelUrl ? `<div style="font-size: 10px; margin-top: 4px; opacity: 0.5;">Debug: Pixel detected but no region data</div>` : ''}
-                </div>
-            `;
-            chatInput.disabled = true;
-            sendButton.disabled = true;
-            return;
+        let chatRoomId = null;
+        let chatRoomName = '';
+
+        if (currentChatRoom === 'region') {
+            if (!regionData) {
+                if (debug) console.log("Still no region data available for region chat");
+                chatMessages.innerHTML = `
+                    <div class="info-message">
+                        <i class="ri-cursor-line"></i>
+                        <div><strong>Tap on a pixel to join a region's chat</strong></div>
+                        <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Click on any pixel on the canvas to join the regional chat for that area.</div>
+                    </div>
+                `;
+                chatInput.disabled = true;
+                sendButton.disabled = true;
+                return;
+            }
+            chatRoomId = regionData.name;
+            chatRoomName = regionData.name;
+        } else if (currentChatRoom === 'alliance') {
+            if (!userData || !userData.allianceId) {
+                 chatMessages.innerHTML = `
+                    <div class="info-message">
+                        <i class="ri-error-warning-line"></i>
+                        <div><strong>You are not in an alliance.</strong></div>
+                    </div>
+                `;
+                chatInput.disabled = true;
+                sendButton.disabled = true;
+                return;
+            }
+            chatRoomId = `alliance_${userData.allianceId}`;
+            chatRoomName = "Alliance Chat";
         }
 
         if (!userData) {
@@ -628,30 +702,30 @@
 
         try {
             if (isInitialLoad) {
-                if (debug) console.log("Initial load of messages for region:", regionData.name);
+                if (debug) console.log(`Initial load of messages for ${chatRoomName}`);
                 chatMessages.innerHTML = `
                     <div class="loading-indicator">
-                        <i class="ri-loader-4-line loading-spinner"></i> Loading messages for ${regionData.name}...
+                        <i class="ri-loader-4-line loading-spinner"></i> Loading messages for ${chatRoomName}...
                     </div>
                 `;
             }
 
-            const response = await fetchMessages(regionData.name);
+            const response = await fetchMessages(chatRoomId);
 
             if (isInitialLoad) {
                 chatMessages.innerHTML = ''; // Clear loading indicator
                 if (response && response.data && response.data.length > 0) {
-                    if (debug) console.log(`Loaded ${response.data.length} messages for ${regionData.name}`);
+                    if (debug) console.log(`Loaded ${response.data.length} messages for ${chatRoomName}`);
                     response.data.forEach(msg => {
                         addMessageToChat(msg.name, msg.messages, msg.createdAt, msg.uid === userData.id.toString());
                     });
                 } else {
-                    if (debug) console.log("No messages found for region:", regionData.name);
+                    if (debug) console.log(`No messages found for ${chatRoomName}`);
                     chatMessages.innerHTML = `
                         <div class="info-message">
                             <i class="ri-chat-new-line"></i>
-                            <div><strong>Welcome to ${regionData.name} chat!</strong></div>
-                            <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Be the first to start the conversation in this region.</div>
+                            <div><strong>Welcome to ${chatRoomName} chat!</strong></div>
+                            <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Be the first to start the conversation.</div>
                         </div>
                     `;
                 }
@@ -720,7 +794,24 @@
 
     // Send message function
     async function handleSendMessage() {
-        if (!userData || !regionData) return;
+        if (!userData) return;
+
+        let chatRoomId = null;
+        if (currentChatRoom === 'region') {
+            if (!regionData) {
+                if (debug) console.error("Cannot send message, no region selected.");
+                return;
+            }
+            chatRoomId = regionData.name;
+        } else if (currentChatRoom === 'alliance') {
+            if (!userData.allianceId) {
+                if (debug) console.error("Cannot send message, not in an alliance.");
+                return;
+            }
+            chatRoomId = `alliance_${userData.allianceId}`;
+        }
+
+        if (!chatRoomId) return;
 
         const message = chatInput.value.trim();
         if (!message) return;
@@ -735,7 +826,7 @@
             chatInput.style.height = 'auto';
 
             // Send to server
-            await sendMessage(userData.id, userData.name, message, regionData.name);
+            await sendMessage(userData.id, userData.name, message, chatRoomId);
 
             // Refresh messages after a short delay to get the actual server response
             setTimeout(() => {
@@ -759,7 +850,11 @@
 
     function startAutoRefresh() {
         refreshInterval = setInterval(() => {
-            if (modal.classList.contains('show') && regionData && userData) {
+            if (modal.classList.contains('show') && userData) {
+                if (currentChatRoom === 'region' && !regionData) {
+                    // Don't refresh region chat if there's no region data
+                    return;
+                }
                 loadMessages();
             }
         }, 10000);
@@ -792,12 +887,32 @@
             await initializeUserData();
         }
 
+        // Set initial chat room
+        let lastRoom = localStorage.getItem('wplace-chat-last-room');
+        if (lastRoom === 'alliance' && userData && userData.allianceId) {
+            currentChatRoom = 'alliance';
+        } else {
+            currentChatRoom = 'region';
+        }
+
         updateUserInfo();
         await loadMessages();
         startAutoRefresh();
 
         if (userData && regionData) {
             chatInput.focus();
+        }
+    });
+
+    chatTabs.addEventListener('click', (e) => {
+        if (e.target.classList.contains('livechat-tab')) {
+            const room = e.target.dataset.room;
+            if (room !== currentChatRoom) {
+                currentChatRoom = room;
+                localStorage.setItem('wplace-chat-last-room', room);
+                updateUserInfo();
+                loadMessages();
+            }
         }
     });
 
