@@ -1,33 +1,19 @@
-import { defineConfig } from "vite"
-import tailwindcss from "@tailwindcss/vite"
-import Userscript from "vite-userscript-plugin"
-import { name, version } from "./package.json"
+import { defineConfig } from 'vite'
+import userscript from 'vite-plugin-userscript'
 
 export default defineConfig({
   plugins: [
-    tailwindcss(),
-    Userscript({
-        entry: "src/main.js",
-        header: {
-          name,
-          version,
-          match: [
-            "http://localhost:3000",
-            "http://localhost:5173",
-            "https://wplace.live"
-          ]
-        },
-        server: {
-          port: 3000
-        }
-      })
-      ],
-  build: {
-    rollupOptions: {
-      output: {
-        inlineDynamicImports: true,
+    userscript({
+      entry: 'src/main.ts',
+      header: {
+        name: 'Wplace Live Chats',
+        version: '1.0',
+        description: 'Livechat for wplace.live',
+        author: 'mininxd',
+        match: ['https://wplace.live/*', 'https://wplace.live'],
+        grant: 'GM_xmlhttpRequest',
+        connect: ['wplace-live-chat-server.vercel.app', 'backend.wplace.live'],
       },
-    },
-  },
-});
-
+    }),
+  ],
+})
