@@ -155,9 +155,9 @@ export function updateUserInfo() {
         let chatContextInfo = currentChatRoom === 'region' ? `Region: ${regionName}` : allianceName;
 
         userInfo.innerHTML = `
-            <h3><i class="material-icons">person</i> ${userData.name} <span style="font-weight: 300;">#${userData.id}</span></h3>
+            <h3><i class="material-icons">person</i> ${userData.name} <span style="font-weight: 300; font-size: 14px;">#${userData.id}</span></h3>
             <div class="livechat-user-details"><i class="material-icons">place</i> ${chatContextInfo}</div>
-            ${allianceDetails}
+            ${currentChatRoom === 'alliance' ? allianceDetails : ''}
             <div class="game-status"><i class="material-icons" style="color: #4CAF50; font-size: 8px;">circle</i> Level ${Math.floor(userData.level)}</div>
         `;
     } else {

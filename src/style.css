@@ -249,6 +249,7 @@
     display: flex;
     gap: 12px;
     align-items: flex-end;
+    border-radius: 16px 16px 0 0;
 }
 
 .livechat-input {
