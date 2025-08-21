@@ -1,5 +1,5 @@
 import { getSettings, loadSettings, setSettings, getUserData, getRegionData, getAllianceData, getCurrentChatRoom, setCurrentChatRoom, setUserData, setAllianceData } from './state';
-import { fetchMessages, sendMessage, fetchAPI } from './api';
+import { fetchMessages, sendMessage, fetchAPI, startDataPolling } from './api';
 import { gsap } from 'gsap';
 import { Draggable } from 'gsap/Draggable';
 
@@ -126,6 +126,17 @@ enterToSendCheckbox.addEventListener('change', (e) => {
     setSettings({ enterToSend: (e.target as HTMLInputElement).checked });
 });
 
+// Listener for exit region button
+userInfo.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('.exit-region-btn')) {
+        setRegionData(null);
+        startDataPolling();
+        updateUserInfo();
+        loadMessages();
+    }
+});
+
 
 // Auto-resize textarea
 chatInput.addEventListener('input', function() {
@@ -193,11 +204,19 @@ export function updateUserInfo() {
             allianceName = `Alliance`; // Fallback while loading
         }
 
-        let chatContextInfo = currentChatRoom === 'region' ? `Region: ${regionName}` : allianceName;
+        let chatContextInfo = '';
+        if (currentChatRoom === 'region') {
+            chatContextInfo = `Region: ${regionName}`;
+            if (regionData) {
+                chatContextInfo += ` <button class="exit-region-btn"><i class="material-icons">logout</i></button>`;
+            }
+        } else {
+            chatContextInfo = allianceName;
+        }
 
         userInfo.innerHTML = `
             <h3><i class="material-icons">person</i> ${userData.name} <span style="font-weight: 300; font-size: 14px;">#${userData.id}</span></h3>
-            <div class="livechat-user-details"><i class="material-icons">place</i> ${chatContextInfo}</div>
+            <div class="livechat-user-details" id="chat-context-info"><i class="material-icons">place</i> ${chatContextInfo}</div>
             ${currentChatRoom === 'alliance' ? allianceDetails : ''}
             <div class="game-status"><i class="material-icons" style="color: #4CAF50; font-size: 8px;">circle</i> Level ${Math.floor(userData.level)}</div>
         `;
