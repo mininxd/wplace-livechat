@@ -37,10 +37,11 @@
     // Create styles with Material You colors
     const styles = `
         :root {
-            --sys-color-primary: #0d6efd;
+            --sys-color-primary: #1a73e8;
+            --sys-color-primary-dark: #1a63d3;
             --sys-color-on-primary: #ffffff;
-            --sys-color-primary-container: #cfe2ff;
-            --sys-color-on-primary-container: #001d36;
+            --sys-color-primary-container: #d6e2ff;
+            --sys-color-on-primary-container: #001a41;
             --sys-color-secondary: #565f71;
             --sys-color-on-secondary: #ffffff;
             --sys-color-secondary-container: #dae2f9;
@@ -49,7 +50,7 @@
             --sys-color-on-tertiary: #ffffff;
             --sys-color-tertiary-container: #ffd7ec;
             --sys-color-on-tertiary-container: #30001f;
-            --sys-color-surface: #fefbff;
+            --sys-color-surface: #fdfbff;
             --sys-color-on-surface: #1b1b1f;
             --sys-color-surface-variant: #e1e2ec;
             --sys-color-on-surface-variant: #44474f;
@@ -90,7 +91,7 @@
         .livechat-fab:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-            background: var(--sys-color-secondary);
+            background: var(--sys-color-primary-dark);
         }
 
         .livechat-modal {
@@ -125,7 +126,7 @@
         }
 
         .livechat-header {
-            background: var(--sys-color-primary);
+            background: linear-gradient(135deg, var(--sys-color-primary), var(--sys-color-primary-dark));
             color: var(--sys-color-on-primary);
             padding: 12px 24px 0;
             display: flex;
@@ -240,7 +241,7 @@
         .message-content {
             background: var(--sys-color-surface-container-highest);
             padding: 14px 18px;
-            border-radius: 16px;
+            border-radius: 18px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             border: 1px solid var(--sys-color-surface-variant);
             font-size: 16px;
@@ -282,6 +283,7 @@
             background: var(--sys-color-surface);
             transition: border-color 0.2s;
             outline: none;
+            overflow-y: hidden;
         }
 
         .livechat-input:focus {
@@ -634,7 +636,7 @@
 
                 if (userData.allianceId) {
                     try {
-                        allianceData = await fetchAPI(`https://backend.wplace.live/alliance/${userData.allianceId}`);
+                        allianceData = await fetchAPI(`https://backend.wplace.live/alliance`);
                         if (allianceData && debug) console.log("Alliance data loaded:", allianceData);
                     } catch (error) {
                         if (debug) console.error('Error loading alliance data:', error);
@@ -654,18 +656,33 @@
     function updateUserInfo() {
         if (userData) {
             let regionName = regionData ? regionData.name : "No region";
-            let allianceName = ''; // Default to empty string if not in alliance
-            if (userData.allianceId) {
-                if (allianceData && allianceData.name) {
-                    allianceName = `Alliance: ${allianceData.name}`;
-                } else {
-                    allianceName = `Alliance`; // Fallback while loading
+            let allianceName = '';
+            let allianceDetails = '';
+
+            if (userData.allianceId && allianceData) {
+                allianceName = `Alliance: ${allianceData.name}`;
+                let details = [];
+                if(allianceData.members) details.push(`${allianceData.members} members`);
+                if(allianceData.pixelsPainted) details.push(`${allianceData.pixelsPainted.toLocaleString()} pixels`);
+                if(allianceData.role) details.push(`Role: ${allianceData.role}`);
+
+                if(details.length > 0) {
+                    allianceDetails += `<div class="livechat-user-details"><i class="ri-group-line"></i> ${details.join(' &bull; ')}</div>`;
                 }
+
+                if(allianceData.description){
+                    allianceDetails += `<div class="livechat-user-details" style="font-style: italic; opacity: 0.8;"><i class="ri-information-line"></i> ${allianceData.description}</div>`;
+                }
+            } else if (userData.allianceId) {
+                allianceName = `Alliance`; // Fallback while loading
             }
+
+            let chatContextInfo = currentChatRoom === 'region' ? `Region: ${regionName}` : allianceName;
 
             userInfo.innerHTML = `
                 <h3><i class="ri-user-line"></i> ${userData.name} <span style="font-weight: 300;">#${userData.id}</span></h3>
-                <div class="livechat-user-details"><i class="ri-map-pin-line"></i> ${currentChatRoom === 'region' ? `Region: ${regionName}` : allianceName}</div>
+                <div class="livechat-user-details"><i class="ri-map-pin-line"></i> ${chatContextInfo}</div>
+                ${allianceDetails}
                 <div class="game-status"><i class="ri-circle-fill" style="color: #4CAF50; font-size: 8px;"></i> Level ${Math.floor(userData.level)}</div>
             `;
         } else {
@@ -697,6 +714,7 @@
 
     // Load and display messages
     async function loadMessages() {
+        const initialChatRoom = currentChatRoom;
         let chatRoomId = null;
         let chatRoomName = '';
         const messagesContainer = currentChatRoom === 'region' ? regionMessages : allianceMessages;
@@ -760,6 +778,11 @@
             }
 
             const response = await fetchMessages(chatRoomId);
+
+            if (currentChatRoom !== initialChatRoom) {
+                if (debug) console.log(`Room changed from ${initialChatRoom} to ${currentChatRoom}. Aborting message load.`);
+                return;
+            }
 
             if (isInitialLoad) {
                 messagesContainer.innerHTML = ''; // Clear loading indicator
