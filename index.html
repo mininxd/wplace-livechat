@@ -1,43 +1,13 @@
 <!doctype html>
-<html data-theme="light" lang="en">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet"/>
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
-    <title>wplace live chat</title>
+    <title>Vite + TS</title>
   </head>
   <body>
-    <div class="fixed bottom-[100px] right-[20px] z-[9999]">
-      <button id="liveChatBtn" class="btn btn-primary rounded-3xl shadow-2xl">Live Chat</button>
-    </div>
-    
-  <!--livechat--> 
-<dialog id="chatModal" class="modal">
-  <div class="modal-box">
-    <div class="modal-top bg-[#e3e9f4] px-3 rubik-font flex justify-between">
-      <div class="w-[50%] font-bold">
-        <span id="usernameEl">name</span>
-        <span id="uidEl" class="font-normal">id</span>
-      </div>
-      <h1 id="regionEl" class="font-medium">region</h1>
-    </div>
-    <div id="chatContainer" class="p-2 mt-5 min-h-[120px] max-h-[250px] overflow-y-scroll flex flex-col gap-2"></div>
-
-    <div class="join w-full">
-    <input id="inputMessages" type="text" placeholder="" class="input input-md join-item rounded-l-3xl" />
-    <button id="sendBtn" class="join-item btn btn-primary btn-md rounded-r-3xl"><i class="ri-send-plane-line"></i></button>
-    </div>
-  </div>
-  <form method="dialog" class="modal-backdrop">
-    <button>close</button>
-  </form>
-</dialog>
-    <script type="module" src="/src/main.js"></script>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
