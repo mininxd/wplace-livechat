@@ -39,7 +39,7 @@
     border: none;
     width: 56px;
     height: 56px;
-    border-radius: 50%;
+    border-radius: 28px;
     cursor: pointer;
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -49,6 +49,15 @@
     justify-content: center;
     visibility: visible !important;
     opacity: 1 !important;
+    padding: 16px;
+    box-sizing: border-box;
+    gap: 8px;
+    overflow: hidden;
+}
+
+.fab-text {
+    white-space: nowrap;
+    font-weight: 500;
 }
 
 .livechat-fab .material-icons {
@@ -236,7 +245,6 @@
 
 .livechat-input-area {
     padding: 16px 20px;
-    background: var(--sys-color-surface-container-highest);
     border-top: 1px solid var(--sys-color-outline);
     display: flex;
     gap: 12px;

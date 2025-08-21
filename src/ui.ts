@@ -10,7 +10,7 @@ const debug = true;
 // Create floating action button
 export const fab = document.createElement('button');
 fab.className = 'livechat-fab';
-fab.innerHTML = '<i class="material-icons">chat</i>';
+fab.innerHTML = '<i class="material-icons">chat</i><span class="fab-text">Live Chat</span>';
 fab.style.display = 'flex';
 fab.style.visibility = 'visible';
 fab.style.opacity = '1';
@@ -69,6 +69,14 @@ modal.innerHTML = `
 // Add elements to page
 document.body.appendChild(fab);
 document.body.appendChild(modal);
+
+// FAB hover animation
+fab.addEventListener('mouseenter', () => {
+    gsap.to(fab, { width: '140px', duration: 0.3, ease: 'power2.out' });
+});
+fab.addEventListener('mouseleave', () => {
+    gsap.to(fab, { width: '56px', duration: 0.3, ease: 'power2.in' });
+});
 
 // Get elements
 export const regionMessages = document.getElementById('region-messages') as HTMLElement;
