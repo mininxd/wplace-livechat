@@ -1,11 +1,11 @@
-import { defineConfig } from 'vite'
-import userscript from 'vite-plugin-userscript'
+import { defineConfig } from 'vite';
+import monkey from 'vite-plugin-monkey';
 
 export default defineConfig({
   plugins: [
-    userscript({
+    monkey({
       entry: 'src/main.ts',
-      header: {
+      userscript: {
         name: 'Wplace Live Chats',
         version: '1.0',
         description: 'Livechat for wplace.live',
@@ -16,4 +16,4 @@ export default defineConfig({
       },
     }),
   ],
-})
+});
