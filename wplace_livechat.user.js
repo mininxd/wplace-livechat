@@ -371,13 +371,34 @@
             }
         }
 
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        .m3-progress-bar {
+            position: relative;
+            width: 100%;
+            height: 4px;
+            background-color: var(--sys-color-surface-variant);
+            border-radius: 2px;
+            overflow: hidden;
         }
 
-        .loading-spinner {
-            animation: spin 1s linear infinite;
+        .m3-progress-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 40%;
+            background-color: var(--sys-color-primary);
+            border-radius: 2px;
+            animation: m3-progress-single-line 1.5s linear infinite;
+        }
+
+        @keyframes m3-progress-single-line {
+            0% {
+                left: -40%;
+            }
+            100% {
+                left: 100%;
+            }
         }
 
         @media (max-width: 480px) {
@@ -407,6 +428,7 @@
     // Global state
     let userData = null;
     let regionData = null;
+    let allianceData = null;
     let lastPixelUrl = null;
     let currentChatRoom = 'region'; // 'region' or 'alliance'
 
@@ -565,9 +587,16 @@
                 <div class="livechat-tabs" id="chatTabs">
                     </div>
             </div>
-            <div class="livechat-messages" id="chatMessages">
+            <div class="livechat-messages" id="region-messages">
                 <div class="loading-indicator">
-                    <i class="ri-loader-4-line loading-spinner"></i> Loading...
+                    <div class="m3-progress-bar" style="width: 50%; margin: 0 auto;"></div>
+                    <div style="margin-top: 8px;">Loading...</div>
+                </div>
+            </div>
+            <div class="livechat-messages" id="alliance-messages" style="display: none;">
+                 <div class="loading-indicator">
+                    <div class="m3-progress-bar" style="width: 50%; margin: 0 auto;"></div>
+                    <div style="margin-top: 8px;">Loading...</div>
                 </div>
             </div>
             <div class="livechat-input-area">
@@ -582,7 +611,8 @@
     document.body.appendChild(modal);
 
     // Get elements
-    const chatMessages = document.getElementById('chatMessages');
+    const regionMessages = document.getElementById('region-messages');
+    const allianceMessages = document.getElementById('alliance-messages');
     const chatInput = document.getElementById('chatInput');
     const sendButton = document.getElementById('sendButton');
     const closeButton = modal.querySelector('.livechat-close');
@@ -601,6 +631,16 @@
             userData = await fetchAPI('https://backend.wplace.live/me');
             if (userData) {
                 if (debug) console.log("User data loaded:", userData);
+
+                if (userData.allianceId) {
+                    try {
+                        allianceData = await fetchAPI(`https://backend.wplace.live/alliance/${userData.allianceId}`);
+                        if (allianceData && debug) console.log("Alliance data loaded:", allianceData);
+                    } catch (error) {
+                        if (debug) console.error('Error loading alliance data:', error);
+                    }
+                }
+
                 updateUserInfo();
                 return true;
             }
@@ -614,7 +654,14 @@
     function updateUserInfo() {
         if (userData) {
             let regionName = regionData ? regionData.name : "No region";
-            let allianceName = userData.allianceId ? `Alliance` : "";
+            let allianceName = ''; // Default to empty string if not in alliance
+            if (userData.allianceId) {
+                if (allianceData && allianceData.name) {
+                    allianceName = `Alliance: ${allianceData.name}`;
+                } else {
+                    allianceName = `Alliance`; // Fallback while loading
+                }
+            }
 
             userInfo.innerHTML = `
                 <h3><i class="ri-user-line"></i> ${userData.name} <span style="font-weight: 300;">#${userData.id}</span></h3>
@@ -652,11 +699,12 @@
     async function loadMessages() {
         let chatRoomId = null;
         let chatRoomName = '';
+        const messagesContainer = currentChatRoom === 'region' ? regionMessages : allianceMessages;
 
         if (currentChatRoom === 'region') {
             if (!regionData) {
                 if (debug) console.log("Still no region data available for region chat");
-                chatMessages.innerHTML = `
+                messagesContainer.innerHTML = `
                     <div class="info-message">
                         <i class="ri-cursor-line"></i>
                         <div><strong>Tap on a pixel to join a region's chat</strong></div>
@@ -671,7 +719,7 @@
             chatRoomName = regionData.name;
         } else if (currentChatRoom === 'alliance') {
             if (!userData || !userData.allianceId) {
-                 chatMessages.innerHTML = `
+                 messagesContainer.innerHTML = `
                     <div class="info-message">
                         <i class="ri-error-warning-line"></i>
                         <div><strong>You are not in an alliance.</strong></div>
@@ -686,7 +734,7 @@
         }
 
         if (!userData) {
-            chatMessages.innerHTML = `
+            messagesContainer.innerHTML = `
                 <div class="info-message">
                     <i class="ri-error-warning-line"></i>
                     <div><strong>Please log in to use chat</strong></div>
@@ -698,14 +746,15 @@
             return;
         }
 
-        const isInitialLoad = chatMessages.querySelector('.chat-message') === null;
+        const isInitialLoad = messagesContainer.querySelector('.chat-message') === null;
 
         try {
             if (isInitialLoad) {
                 if (debug) console.log(`Initial load of messages for ${chatRoomName}`);
-                chatMessages.innerHTML = `
+                messagesContainer.innerHTML = `
                     <div class="loading-indicator">
-                        <i class="ri-loader-4-line loading-spinner"></i> Loading messages for ${chatRoomName}...
+                        <div class="m3-progress-bar" style="width: 50%; margin: 0 auto;"></div>
+                        <div style="margin-top: 8px;">Loading messages for ${chatRoomName}...</div>
                     </div>
                 `;
             }
@@ -713,7 +762,7 @@
             const response = await fetchMessages(chatRoomId);
 
             if (isInitialLoad) {
-                chatMessages.innerHTML = ''; // Clear loading indicator
+                messagesContainer.innerHTML = ''; // Clear loading indicator
                 if (response && response.data && response.data.length > 0) {
                     if (debug) console.log(`Loaded ${response.data.length} messages for ${chatRoomName}`);
                     response.data.forEach(msg => {
@@ -721,7 +770,7 @@
                     });
                 } else {
                     if (debug) console.log(`No messages found for ${chatRoomName}`);
-                    chatMessages.innerHTML = `
+                    messagesContainer.innerHTML = `
                         <div class="info-message">
                             <i class="ri-chat-new-line"></i>
                             <div><strong>Welcome to ${chatRoomName} chat!</strong></div>
@@ -731,7 +780,7 @@
                 }
             } else {
                 // This is a refresh, only add new messages
-                const lastMessage = chatMessages.querySelector('.chat-message:last-child');
+                const lastMessage = messagesContainer.querySelector('.chat-message:last-child');
                 const lastTimestamp = lastMessage ? lastMessage.dataset.timestamp : null;
 
                 if (lastTimestamp && response && response.data && response.data.length > 0) {
@@ -745,13 +794,13 @@
                 }
             }
 
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
             chatInput.disabled = false;
             sendButton.disabled = false;
         } catch (error) {
             if (debug) console.error('Error loading messages:', error);
             if (isInitialLoad) {
-                chatMessages.innerHTML = `
+                messagesContainer.innerHTML = `
                     <div class="info-message">
                         <i class="ri-error-warning-line"></i>
                         <div><strong>Failed to load messages</strong></div>
@@ -766,6 +815,7 @@
 
     // Add message to chat display
     function addMessageToChat(name, message, timestamp, isOwn = false) {
+        const messagesContainer = currentChatRoom === 'region' ? regionMessages : allianceMessages;
         const messageDiv = document.createElement('div');
         messageDiv.className = 'chat-message';
         if (isOwn) {
@@ -788,8 +838,8 @@
                 <div class="message-timestamp">${timeString}</div>
             </div>
         `;
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
     // Send message function
@@ -891,8 +941,12 @@
         let lastRoom = localStorage.getItem('wplace-chat-last-room');
         if (lastRoom === 'alliance' && userData && userData.allianceId) {
             currentChatRoom = 'alliance';
+            regionMessages.style.display = 'none';
+            allianceMessages.style.display = 'block';
         } else {
             currentChatRoom = 'region';
+            regionMessages.style.display = 'block';
+            allianceMessages.style.display = 'none';
         }
 
         updateUserInfo();
@@ -910,6 +964,15 @@
             if (room !== currentChatRoom) {
                 currentChatRoom = room;
                 localStorage.setItem('wplace-chat-last-room', room);
+
+                if (room === 'region') {
+                    regionMessages.style.display = 'block';
+                    allianceMessages.style.display = 'none';
+                } else {
+                    regionMessages.style.display = 'none';
+                    allianceMessages.style.display = 'block';
+                }
+
                 updateUserInfo();
                 loadMessages();
             }
