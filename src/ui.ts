@@ -5,15 +5,17 @@ import { Draggable } from 'gsap/Draggable';
 
 gsap.registerPlugin(Draggable);
 
-const debug = false;
+const debug = true;
 
+// Create floating action button
 export const fab = document.createElement('button');
 fab.className = 'livechat-fab';
-fab.innerHTML = '<i class="ri-chat-3-line"></i> Live Chat';
+fab.innerHTML = '<i class="material-icons">chat</i>';
 fab.style.display = 'flex';
 fab.style.visibility = 'visible';
 fab.style.opacity = '1';
 
+// Ensure FAB is always visible
 const ensureFABVisible = () => {
     if (fab && document.body.contains(fab)) {
         fab.style.display = 'flex';
@@ -24,8 +26,10 @@ const ensureFABVisible = () => {
     }
 };
 
+// Check FAB visibility periodically
 setInterval(ensureFABVisible, 2000);
 
+// Create modal
 export const modal = document.createElement('div');
 modal.className = 'livechat-modal';
 modal.innerHTML = `
@@ -33,12 +37,12 @@ modal.innerHTML = `
         <div class="livechat-header">
             <div class="livechat-header-main">
                 <div class="livechat-user-info" id="userInfo">
-                    <h3><i class="ri-user-line"></i> Loading...</h3>
-                    <div class="livechat-user-details"><i class="ri-hashtag"></i> ID: ...</div>
-                    <div class="livechat-user-details"><i class="ri-map-pin-line"></i> Region: ...</div>
-                    <div class="game-status"><i class="ri-circle-fill" style="color: #4CAF50; font-size: 8px;"></i> Online</div>
+                    <h3><i class="material-icons">person</i> Loading...</h3>
+                    <div class="livechat-user-details"><i class="material-icons">tag</i> ID: ...</div>
+                    <div class="livechat-user-details"><i class="material-icons">place</i> Region: ...</div>
+                    <div class="game-status"><i class="material-icons" style="color: #4CAF50; font-size: 8px;">circle</i> Online</div>
                 </div>
-                <button class="livechat-close"><i class="ri-close-line"></i></button>
+                <button class="livechat-close"><i class="material-icons">close</i></button>
             </div>
             <div class="livechat-tabs" id="chatTabs">
                 </div>
@@ -57,27 +61,31 @@ modal.innerHTML = `
         </div>
         <div class="livechat-input-area">
             <textarea class="livechat-input" placeholder="Type your message..." rows="1" id="chatInput" disabled></textarea>
-            <button class="livechat-send" id="sendButton" disabled><i class="ri-send-plane-fill"></i></button>
+            <button class="livechat-send" id="sendButton" disabled><i class="material-icons">send</i></button>
         </div>
     </div>
 `;
 
+// Add elements to page
 document.body.appendChild(fab);
 document.body.appendChild(modal);
 
-const regionMessages = document.getElementById('region-messages') as HTMLElement;
-const allianceMessages = document.getElementById('alliance-messages') as HTMLElement;
+// Get elements
+export const regionMessages = document.getElementById('region-messages') as HTMLElement;
+export const allianceMessages = document.getElementById('alliance-messages') as HTMLElement;
 export const chatInput = document.getElementById('chatInput') as HTMLTextAreaElement;
 export const sendButton = document.getElementById('sendButton') as HTMLButtonElement;
 export const closeButton = modal.querySelector('.livechat-close') as HTMLButtonElement;
-const userInfo = document.getElementById('userInfo') as HTMLElement;
+export const userInfo = document.getElementById('userInfo') as HTMLElement;
 export const chatTabs = document.getElementById('chatTabs') as HTMLElement;
 
+// Auto-resize textarea
 chatInput.addEventListener('input', function() {
     this.style.height = 'auto';
     this.style.height = Math.min(this.scrollHeight, 80) + 'px';
 });
 
+// Initialize user data
 export async function initializeUserData() {
     try {
         const userData = await fetchAPI('https://backend.wplace.live/me');
@@ -87,7 +95,7 @@ export async function initializeUserData() {
 
             if (userData.allianceId) {
                 try {
-                    const allianceData = await fetchAPI(`https://backend.wplace.live/alliance/${userData.allianceId}`);
+                    const allianceData = await fetchAPI(`https://backend.wplace.live/alliance`);
                     if (allianceData && debug) {
                         setAllianceData(allianceData);
                         console.log("Alliance data loaded:", allianceData);
@@ -106,6 +114,7 @@ export async function initializeUserData() {
     return false;
 }
 
+// Add debug info to user info display
 export function updateUserInfo() {
     const userData = getUserData();
     const regionData = getRegionData();
@@ -114,25 +123,40 @@ export function updateUserInfo() {
 
     if (userData) {
         let regionName = regionData ? regionData.name : "No region";
-        let allianceName = ''; // Default to empty string if not in alliance
-        if (userData.allianceId) {
-            if (allianceData && allianceData.name) {
-                allianceName = `Alliance: ${allianceData.name}`;
-            } else {
-                allianceName = `Alliance`; // Fallback while loading
+        let allianceName = '';
+        let allianceDetails = '';
+
+        if (userData.allianceId && allianceData) {
+            allianceName = `Alliance: ${allianceData.name}`;
+            let details = [];
+            if(allianceData.members) details.push(`${allianceData.members} members`);
+            if(allianceData.pixelsPainted) details.push(`${allianceData.pixelsPainted.toLocaleString()} pixels`);
+            if(allianceData.role) details.push(`Role: ${allianceData.role}`);
+
+            if(details.length > 0) {
+                allianceDetails += `<div class="livechat-user-details"><i class="material-icons">group</i> ${details.join(' &bull; ')}</div>`;
             }
+
+            if(allianceData.description){
+                allianceDetails += `<div class="livechat-user-details" style="font-style: italic; opacity: 0.8;"><i class="material-icons">info</i> ${allianceData.description}</div>`;
+            }
+        } else if (userData.allianceId) {
+            allianceName = `Alliance`; // Fallback while loading
         }
 
+        let chatContextInfo = currentChatRoom === 'region' ? `Region: ${regionName}` : allianceName;
+
         userInfo.innerHTML = `
-            <h3><i class="ri-user-line"></i> ${userData.name} <span style="font-weight: 300;">#${userData.id}</span></h3>
-            <div class="livechat-user-details"><i class="ri-map-pin-line"></i> ${currentChatRoom === 'region' ? `Region: ${regionName}` : allianceName}</div>
-            <div class="game-status"><i class="ri-circle-fill" style="color: #4CAF50; font-size: 8px;"></i> Level ${Math.floor(userData.level)}</div>
+            <h3><i class="material-icons">person</i> ${userData.name} <span style="font-weight: 300;">#${userData.id}</span></h3>
+            <div class="livechat-user-details"><i class="material-icons">place</i> ${chatContextInfo}</div>
+            ${allianceDetails}
+            <div class="game-status"><i class="material-icons" style="color: #4CAF50; font-size: 8px;">circle</i> Level ${Math.floor(userData.level)}</div>
         `;
     } else {
         userInfo.innerHTML = `
-            <h3><i class="ri-user-line"></i> Loading...</h3>
-            <div class="livechat-user-details"><i class="ri-map-pin-line"></i> Region: ...</div>
-            <div class="game-status"><i class="ri-circle-fill" style="color: #FF9800; font-size: 8px;"></i> Loading</div>
+            <h3><i class="material-icons">person</i> Loading...</h3>
+            <div class="livechat-user-details"><i class="material-icons">place</i> Region: ...</div>
+            <div class="game-status"><i class="material-icons" style="color: #FF9800; font-size: 8px;">circle</i> Loading</div>
         `;
     }
 
@@ -155,11 +179,12 @@ export function updateUserInfo() {
     }
 }
 
+// Load and display messages
 export async function loadMessages() {
     const userData = getUserData();
     const regionData = getRegionData();
     const currentChatRoom = getCurrentChatRoom();
-
+    const initialChatRoom = currentChatRoom;
     let chatRoomId: string | null = null;
     let chatRoomName = '';
     const messagesContainer = currentChatRoom === 'region' ? regionMessages : allianceMessages;
@@ -169,7 +194,7 @@ export async function loadMessages() {
             if (debug) console.log("Still no region data available for region chat");
             messagesContainer.innerHTML = `
                 <div class="info-message">
-                    <i class="ri-cursor-line"></i>
+                    <i class="material-icons">near_me</i>
                     <div><strong>Tap on a pixel to join a region's chat</strong></div>
                     <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Click on any pixel on the canvas to join the regional chat for that area.</div>
                 </div>
@@ -184,7 +209,7 @@ export async function loadMessages() {
         if (!userData || !userData.allianceId) {
              messagesContainer.innerHTML = `
                 <div class="info-message">
-                    <i class="ri-error-warning-line"></i>
+                    <i class="material-icons">warning</i>
                     <div><strong>You are not in an alliance.</strong></div>
                 </div>
             `;
@@ -199,7 +224,7 @@ export async function loadMessages() {
     if (!userData) {
         messagesContainer.innerHTML = `
             <div class="info-message">
-                <i class="ri-error-warning-line"></i>
+                <i class="material-icons">warning</i>
                 <div><strong>Please log in to use chat</strong></div>
                 <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">You need to be logged in to participate in chat.</div>
             </div>
@@ -224,6 +249,11 @@ export async function loadMessages() {
 
         const response = await fetchMessages(chatRoomId as string);
 
+        if (getCurrentChatRoom() !== initialChatRoom) {
+            if (debug) console.log(`Room changed from ${initialChatRoom} to ${getCurrentChatRoom()}. Aborting message load.`);
+            return;
+        }
+
         if (isInitialLoad) {
             messagesContainer.innerHTML = ''; // Clear loading indicator
             if (response && response.data && response.data.length > 0) {
@@ -235,7 +265,7 @@ export async function loadMessages() {
                 if (debug) console.log(`No messages found for ${chatRoomName}`);
                 messagesContainer.innerHTML = `
                     <div class="info-message">
-                        <i class="ri-chat-new-line"></i>
+                        <i class="material-icons">chat</i>
                         <div><strong>Welcome to ${chatRoomName} chat!</strong></div>
                         <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Be the first to start the conversation.</div>
                     </div>
@@ -265,7 +295,7 @@ export async function loadMessages() {
         if (isInitialLoad) {
             messagesContainer.innerHTML = `
                 <div class="info-message">
-                    <i class="ri-error-warning-line"></i>
+                    <i class="material-icons">warning</i>
                     <div><strong>Failed to load messages</strong></div>
                     <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Please check your connection and try again.</div>
                 </div>
@@ -276,6 +306,7 @@ export async function loadMessages() {
     }
 }
 
+// Add message to chat display
 function addMessageToChat(name: string, message: string, timestamp: string, isOwn = false) {
     const currentChatRoom = getCurrentChatRoom();
     const messagesContainer = currentChatRoom === 'region' ? regionMessages : allianceMessages;
@@ -305,6 +336,7 @@ function addMessageToChat(name: string, message: string, timestamp: string, isOw
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
+// Send message function
 export async function handleSendMessage() {
     const userData = getUserData();
     const regionData = getRegionData();
@@ -334,7 +366,7 @@ export async function handleSendMessage() {
 
     // Disable send button
     sendButton.disabled = true;
-    sendButton.innerHTML = '<i class="ri-loader-4-line loading-spinner"></i>';
+    sendButton.innerHTML = '<i class="material-icons loading-spinner">sync</i>';
 
     try {
         // Clear input
@@ -357,10 +389,11 @@ export async function handleSendMessage() {
     } finally {
         // Re-enable send button
         sendButton.disabled = false;
-        sendButton.innerHTML = '<i class="ri-send-plane-fill"></i>';
+        sendButton.innerHTML = '<i class="material-icons">send</i>';
     }
 }
 
+// Auto-refresh messages every 10 seconds
 let refreshInterval: any;
 
 export function startAutoRefresh() {
@@ -407,7 +440,7 @@ export function handleTabClick(e: MouseEvent) {
     }
 }
 
-export function handleFabClick() {
+export async function handleFabClick() {
     modal.classList.add('show');
 
     Draggable.create(fab, {
@@ -419,7 +452,7 @@ export function handleFabClick() {
 
     // Initialize user data if not already loaded
     if (!userData) {
-        initializeUserData();
+        await initializeUserData();
     }
 
     // Set initial chat room
@@ -435,7 +468,7 @@ export function handleFabClick() {
     }
 
     updateUserInfo();
-    loadMessages();
+    await loadMessages();
     startAutoRefresh();
 
     if (userData && getRegionData()) {

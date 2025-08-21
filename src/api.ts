@@ -1,3 +1,5 @@
+/// <reference types="@types/greasemonkey" />
+
 import { getRegionData, setRegionData } from './state';
 
 const API_BASE = 'https://wplace-live-chat-server.vercel.app';
@@ -22,7 +24,7 @@ export function fetchMessages(region: string) {
         GM_xmlhttpRequest({
             method: 'GET',
             url: `${API_BASE}/users/${region}`,
-            onload: function(response) {
+            onload: function(response: GM.Response<any>) {
                 try {
                     const data = JSON.parse(response.responseText);
                     resolve(data);
@@ -30,7 +32,7 @@ export function fetchMessages(region: string) {
                     reject(e);
                 }
             },
-            onerror: function(error) {
+            onerror: function(error: any) {
                 reject(error);
             }
         });
@@ -51,7 +53,7 @@ export function sendMessage(uid: string, name: string, message: string, region: 
                 messages: message,
                 region: region
             }),
-            onload: function(response) {
+            onload: function(response: GM.Response<any>) {
                 try {
                     if (response.status >= 200 && response.status < 300) {
                         const data = response.responseText ? JSON.parse(response.responseText) : {};
@@ -63,7 +65,7 @@ export function sendMessage(uid: string, name: string, message: string, region: 
                     reject(e);
                 }
             },
-            onerror: function(error) {
+            onerror: function(error: any) {
                 reject(error);
             }
         });

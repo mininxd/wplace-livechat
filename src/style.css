@@ -1,11 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap');
-@import url('https://cdn.jsdelivr.net/npm/remixicon@4.0.0/fonts/remixicon.css');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
 :root {
-    --sys-color-primary: #0d6efd;
+    --sys-color-primary: #1a73e8;
+    --sys-color-primary-dark: #1a63d3;
     --sys-color-on-primary: #ffffff;
-    --sys-color-primary-container: #cfe2ff;
-    --sys-color-on-primary-container: #001d36;
+    --sys-color-primary-container: #d6e2ff;
+    --sys-color-on-primary-container: #001a41;
     --sys-color-secondary: #565f71;
     --sys-color-on-secondary: #ffffff;
     --sys-color-secondary-container: #dae2f9;
@@ -14,7 +15,7 @@
     --sys-color-on-tertiary: #ffffff;
     --sys-color-tertiary-container: #ffd7ec;
     --sys-color-on-tertiary-container: #30001f;
-    --sys-color-surface: #fefbff;
+    --sys-color-surface: #fdfbff;
     --sys-color-on-surface: #1b1b1f;
     --sys-color-surface-variant: #e1e2ec;
     --sys-color-on-surface-variant: #44474f;
@@ -36,26 +37,28 @@
     background: var(--sys-color-primary);
     color: var(--sys-color-on-primary);
     border: none;
-    border-radius: 16px;
-    padding: 16px 24px;
-    font-size: 14px;
-    font-weight: 500;
-    letter-spacing: 0.1px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
     cursor: pointer;
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 10001;
     display: flex !important;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
     visibility: visible !important;
     opacity: 1 !important;
+}
+
+.livechat-fab .material-icons {
+    font-size: 24px;
 }
 
 .livechat-fab:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-    background: var(--sys-color-secondary);
+    background: var(--sys-color-primary-dark);
 }
 
 .livechat-modal {
@@ -90,7 +93,7 @@
 }
 
 .livechat-header {
-    background: var(--sys-color-primary);
+    background: linear-gradient(135deg, var(--sys-color-primary), var(--sys-color-primary-dark));
     color: var(--sys-color-on-primary);
     padding: 12px 24px 0;
     display: flex;
@@ -138,6 +141,12 @@
     margin: 0 0 4px 0;
     font-size: 18px;
     font-weight: 500;
+}
+
+.livechat-user-info .material-icons {
+    font-size: 16px;
+    vertical-align: -3px;
+    margin-right: 4px;
 }
 
 .livechat-user-details {
@@ -205,7 +214,7 @@
 .message-content {
     background: var(--sys-color-surface-container-highest);
     padding: 14px 18px;
-    border-radius: 16px;
+    border-radius: 18px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--sys-color-surface-variant);
     font-size: 16px;
@@ -247,6 +256,7 @@
     background: var(--sys-color-surface);
     transition: border-color 0.2s;
     outline: none;
+    overflow-y: hidden;
 }
 
 .livechat-input:focus {
@@ -364,6 +374,19 @@
     100% {
         left: 100%;
     }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-spinner {
+    animation: spin 1s linear infinite;
 }
 
 @media (max-width: 480px) {

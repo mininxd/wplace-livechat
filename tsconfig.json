@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "types": ["@types/greasemonkey"],
     "target": "ES2022",
     "useDefineForClassFields": true,
     "module": "ESNext",
