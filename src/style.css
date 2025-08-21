@@ -245,7 +245,7 @@
 
 .livechat-input-area {
     padding: 16px 20px;
-    border-top: 1px solid var(--sys-color-outline);
+    background-color: var(--sys-color-surface-variant);
     display: flex;
     gap: 12px;
     align-items: flex-end;
