@@ -371,13 +371,48 @@
             }
         }
 
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        .google-loader {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            height: 40px;
         }
 
-        .loading-spinner {
-            animation: spin 1s linear infinite;
+        .google-loader-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: google-loader-bounce 1.4s infinite ease-in-out both;
+        }
+
+        .google-loader-dot:nth-child(1) {
+            background-color: #4285F4; /* Blue */
+            animation-delay: -0.32s;
+        }
+
+        .google-loader-dot:nth-child(2) {
+            background-color: #EA4335; /* Red */
+            animation-delay: -0.16s;
+        }
+
+        .google-loader-dot:nth-child(3) {
+            background-color: #FBBC05; /* Yellow */
+            animation-delay: 0s;
+        }
+
+        .google-loader-dot:nth-child(4) {
+            background-color: #34A853; /* Green */
+            animation-delay: 0.16s;
+        }
+
+        @keyframes google-loader-bounce {
+            0%, 80%, 100% {
+                transform: scale(0);
+            }
+            40% {
+                transform: scale(1.0);
+            }
         }
 
         @media (max-width: 480px) {
@@ -565,9 +600,26 @@
                 <div class="livechat-tabs" id="chatTabs">
                     </div>
             </div>
-            <div class="livechat-messages" id="chatMessages">
+            <div class="livechat-messages" id="region-messages">
                 <div class="loading-indicator">
-                    <i class="ri-loader-4-line loading-spinner"></i> Loading...
+                    <div class="google-loader">
+                        <div class="google-loader-dot"></div>
+                        <div class="google-loader-dot"></div>
+                        <div class="google-loader-dot"></div>
+                        <div class="google-loader-dot"></div>
+                    </div>
+                    <div>Loading...</div>
+                </div>
+            </div>
+            <div class="livechat-messages" id="alliance-messages" style="display: none;">
+                 <div class="loading-indicator">
+                    <div class="google-loader">
+                        <div class="google-loader-dot"></div>
+                        <div class="google-loader-dot"></div>
+                        <div class="google-loader-dot"></div>
+                        <div class="google-loader-dot"></div>
+                    </div>
+                    <div>Loading...</div>
                 </div>
             </div>
             <div class="livechat-input-area">
@@ -582,7 +634,8 @@
     document.body.appendChild(modal);
 
     // Get elements
-    const chatMessages = document.getElementById('chatMessages');
+    const regionMessages = document.getElementById('region-messages');
+    const allianceMessages = document.getElementById('alliance-messages');
     const chatInput = document.getElementById('chatInput');
     const sendButton = document.getElementById('sendButton');
     const closeButton = modal.querySelector('.livechat-close');
@@ -652,11 +705,12 @@
     async function loadMessages() {
         let chatRoomId = null;
         let chatRoomName = '';
+        const messagesContainer = currentChatRoom === 'region' ? regionMessages : allianceMessages;
 
         if (currentChatRoom === 'region') {
             if (!regionData) {
                 if (debug) console.log("Still no region data available for region chat");
-                chatMessages.innerHTML = `
+                messagesContainer.innerHTML = `
                     <div class="info-message">
                         <i class="ri-cursor-line"></i>
                         <div><strong>Tap on a pixel to join a region's chat</strong></div>
@@ -671,7 +725,7 @@
             chatRoomName = regionData.name;
         } else if (currentChatRoom === 'alliance') {
             if (!userData || !userData.allianceId) {
-                 chatMessages.innerHTML = `
+                 messagesContainer.innerHTML = `
                     <div class="info-message">
                         <i class="ri-error-warning-line"></i>
                         <div><strong>You are not in an alliance.</strong></div>
@@ -686,7 +740,7 @@
         }
 
         if (!userData) {
-            chatMessages.innerHTML = `
+            messagesContainer.innerHTML = `
                 <div class="info-message">
                     <i class="ri-error-warning-line"></i>
                     <div><strong>Please log in to use chat</strong></div>
@@ -698,14 +752,20 @@
             return;
         }
 
-        const isInitialLoad = chatMessages.querySelector('.chat-message') === null;
+        const isInitialLoad = messagesContainer.querySelector('.chat-message') === null;
 
         try {
             if (isInitialLoad) {
                 if (debug) console.log(`Initial load of messages for ${chatRoomName}`);
-                chatMessages.innerHTML = `
+                messagesContainer.innerHTML = `
                     <div class="loading-indicator">
-                        <i class="ri-loader-4-line loading-spinner"></i> Loading messages for ${chatRoomName}...
+                        <div class="google-loader">
+                            <div class="google-loader-dot"></div>
+                            <div class="google-loader-dot"></div>
+                            <div class="google-loader-dot"></div>
+                            <div class="google-loader-dot"></div>
+                        </div>
+                        <div>Loading messages for ${chatRoomName}...</div>
                     </div>
                 `;
             }
@@ -713,7 +773,7 @@
             const response = await fetchMessages(chatRoomId);
 
             if (isInitialLoad) {
-                chatMessages.innerHTML = ''; // Clear loading indicator
+                messagesContainer.innerHTML = ''; // Clear loading indicator
                 if (response && response.data && response.data.length > 0) {
                     if (debug) console.log(`Loaded ${response.data.length} messages for ${chatRoomName}`);
                     response.data.forEach(msg => {
@@ -721,7 +781,7 @@
                     });
                 } else {
                     if (debug) console.log(`No messages found for ${chatRoomName}`);
-                    chatMessages.innerHTML = `
+                    messagesContainer.innerHTML = `
                         <div class="info-message">
                             <i class="ri-chat-new-line"></i>
                             <div><strong>Welcome to ${chatRoomName} chat!</strong></div>
@@ -731,7 +791,7 @@
                 }
             } else {
                 // This is a refresh, only add new messages
-                const lastMessage = chatMessages.querySelector('.chat-message:last-child');
+                const lastMessage = messagesContainer.querySelector('.chat-message:last-child');
                 const lastTimestamp = lastMessage ? lastMessage.dataset.timestamp : null;
 
                 if (lastTimestamp && response && response.data && response.data.length > 0) {
@@ -745,13 +805,13 @@
                 }
             }
 
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
             chatInput.disabled = false;
             sendButton.disabled = false;
         } catch (error) {
             if (debug) console.error('Error loading messages:', error);
             if (isInitialLoad) {
-                chatMessages.innerHTML = `
+                messagesContainer.innerHTML = `
                     <div class="info-message">
                         <i class="ri-error-warning-line"></i>
                         <div><strong>Failed to load messages</strong></div>
@@ -766,6 +826,7 @@
 
     // Add message to chat display
     function addMessageToChat(name, message, timestamp, isOwn = false) {
+        const messagesContainer = currentChatRoom === 'region' ? regionMessages : allianceMessages;
         const messageDiv = document.createElement('div');
         messageDiv.className = 'chat-message';
         if (isOwn) {
@@ -788,8 +849,8 @@
                 <div class="message-timestamp">${timeString}</div>
             </div>
         `;
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
     // Send message function
@@ -891,8 +952,12 @@
         let lastRoom = localStorage.getItem('wplace-chat-last-room');
         if (lastRoom === 'alliance' && userData && userData.allianceId) {
             currentChatRoom = 'alliance';
+            regionMessages.style.display = 'none';
+            allianceMessages.style.display = 'block';
         } else {
             currentChatRoom = 'region';
+            regionMessages.style.display = 'block';
+            allianceMessages.style.display = 'none';
         }
 
         updateUserInfo();
@@ -910,6 +975,15 @@
             if (room !== currentChatRoom) {
                 currentChatRoom = room;
                 localStorage.setItem('wplace-chat-last-room', room);
+
+                if (room === 'region') {
+                    regionMessages.style.display = 'block';
+                    allianceMessages.style.display = 'none';
+                } else {
+                    regionMessages.style.display = 'none';
+                    allianceMessages.style.display = 'block';
+                }
+
                 updateUserInfo();
                 loadMessages();
             }
