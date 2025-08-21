@@ -15,6 +15,9 @@ on:
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -30,14 +33,24 @@ jobs:
       - name: Build userscript
         run: npm run build
 
+      - name: Get short SHA
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Create Git tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag ${{ env.sha_short }}
+          git push origin ${{ env.sha_short }}
+
       - name: Create Release
-        id: create_release
         uses: softprops/action-gh-release@v1
         with:
           files: dist/wplace_livechat.user.js
           title: ${{ github.event.inputs.title }}
           body: ${{ github.event.inputs.body }}
-          tag_name: ${{ github.sha }}
+          tag_name: ${{ env.sha_short }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
