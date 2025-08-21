@@ -223,6 +223,7 @@
             animation: slideIn 0.3s ease-out;
             display: flex;
             flex-direction: column;
+            align-items: flex-start;
         }
 
         .chat-message.own {
@@ -616,15 +617,13 @@
             let allianceName = userData.allianceId ? `Alliance` : "";
 
             userInfo.innerHTML = `
-                <h3><i class="ri-user-line"></i> ${userData.name}</h3>
-                <div class="livechat-user-details"><i class="ri-hashtag"></i> ID: ${userData.id}</div>
+                <h3><i class="ri-user-line"></i> ${userData.name} <span style="font-weight: 300;">#${userData.id}</span></h3>
                 <div class="livechat-user-details"><i class="ri-map-pin-line"></i> ${currentChatRoom === 'region' ? `Region: ${regionName}` : allianceName}</div>
                 <div class="game-status"><i class="ri-circle-fill" style="color: #4CAF50; font-size: 8px;"></i> Level ${Math.floor(userData.level)}</div>
             `;
         } else {
             userInfo.innerHTML = `
                 <h3><i class="ri-user-line"></i> Loading...</h3>
-                <div class="livechat-user-details"><i class="ri-hashtag"></i> ID: ...</div>
                 <div class="livechat-user-details"><i class="ri-map-pin-line"></i> Region: ...</div>
                 <div class="game-status"><i class="ri-circle-fill" style="color: #FF9800; font-size: 8px;"></i> Loading</div>
             `;
@@ -889,7 +888,8 @@
         }
 
         // Set initial chat room
-        if (userData && userData.allianceId) {
+        let lastRoom = localStorage.getItem('wplace-chat-last-room');
+        if (lastRoom === 'alliance' && userData && userData.allianceId) {
             currentChatRoom = 'alliance';
         } else {
             currentChatRoom = 'region';
@@ -909,6 +909,7 @@
             const room = e.target.dataset.room;
             if (room !== currentChatRoom) {
                 currentChatRoom = room;
+                localStorage.setItem('wplace-chat-last-room', room);
                 updateUserInfo();
                 loadMessages();
             }
