@@ -380,35 +380,25 @@
             overflow: hidden;
         }
 
-        .m3-progress-bar::before, .m3-progress-bar::after {
+        .m3-progress-bar::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             height: 100%;
+            width: 40%;
             background-color: var(--sys-color-primary);
             border-radius: 2px;
+            animation: m3-progress-single-line 1.5s linear infinite;
         }
 
-        .m3-progress-bar::before {
-            animation: m3-progress-anim-short 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
-        }
-
-        .m3-progress-bar::after {
-            animation: m3-progress-anim-long 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
-            animation-delay: 1.15s;
-        }
-
-        @keyframes m3-progress-anim-short {
-            0%   { left: -100%; width: 100%; }
-            40%  { left: 0%; width: 50%; }
-            100% { left: 100%; width: 25%; }
-        }
-
-        @keyframes m3-progress-anim-long {
-            0%   { left: -200%; width: 100%; }
-            60%  { left: 107%; width: 40%; }
-            100% { left: 107%; width: 40%; }
+        @keyframes m3-progress-single-line {
+            0% {
+                left: -40%;
+            }
+            100% {
+                left: 100%;
+            }
         }
 
         @media (max-width: 480px) {
@@ -667,7 +657,7 @@
             let allianceName = ''; // Default to empty string if not in alliance
             if (userData.allianceId) {
                 if (allianceData && allianceData.name) {
-                    allianceName = `Alliance: ${allianceData.name} (${allianceData.members} members)`;
+                    allianceName = `Alliance: ${allianceData.name}`;
                 } else {
                     allianceName = `Alliance`; // Fallback while loading
                 }
