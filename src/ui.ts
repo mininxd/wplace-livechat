@@ -1,4 +1,4 @@
-import { getUserData, getRegionData, getAllianceData, getCurrentChatRoom, setCurrentChatRoom, setUserData, setAllianceData } from './state';
+import { getSettings, loadSettings, setSettings, getUserData, getRegionData, getAllianceData, getCurrentChatRoom, setCurrentChatRoom, setUserData, setAllianceData } from './state';
 import { fetchMessages, sendMessage, fetchAPI } from './api';
 import { gsap } from 'gsap';
 import { Draggable } from 'gsap/Draggable';
@@ -10,7 +10,7 @@ const debug = true;
 // Create floating action button
 export const fab = document.createElement('button');
 fab.className = 'livechat-fab';
-fab.innerHTML = '<i class="material-icons">chat</i><span class="fab-text">Live Chat</span>';
+fab.innerHTML = '<i class="material-icons">chat</i>';
 fab.style.display = 'flex';
 fab.style.visibility = 'visible';
 fab.style.opacity = '1';
@@ -42,7 +42,10 @@ modal.innerHTML = `
                     <div class="livechat-user-details"><i class="material-icons">place</i> Region: ...</div>
                     <div class="game-status"><i class="material-icons" style="color: #4CAF50; font-size: 8px;">circle</i> Online</div>
                 </div>
-                <button class="livechat-close"><i class="material-icons">close</i></button>
+                    <div class="livechat-header-actions">
+                        <button class="livechat-settings-btn"><i class="material-icons">settings</i></button>
+                        <button class="livechat-close"><i class="material-icons">close</i></button>
+                    </div>
             </div>
             <div class="livechat-tabs" id="chatTabs">
                 </div>
@@ -70,13 +73,21 @@ modal.innerHTML = `
 document.body.appendChild(fab);
 document.body.appendChild(modal);
 
-// FAB hover animation
-fab.addEventListener('mouseenter', () => {
-    gsap.to(fab, { width: '140px', duration: 0.3, ease: 'power2.out' });
-});
-fab.addEventListener('mouseleave', () => {
-    gsap.to(fab, { width: '56px', duration: 0.3, ease: 'power2.in' });
-});
+// Create settings modal
+export const settingsModal = document.createElement('div');
+settingsModal.className = 'livechat-settings-modal';
+settingsModal.style.display = 'none'; // Initially hidden
+settingsModal.innerHTML = `
+    <div class="livechat-settings-content">
+        <h4>Chat Settings</h4>
+        <div class="setting-item">
+            <label for="enter-to-send">Press Enter to send</label>
+            <input type="checkbox" id="enter-to-send" />
+        </div>
+        <button class="livechat-settings-close"><i class="material-icons">close</i></button>
+    </div>
+`;
+document.body.appendChild(settingsModal);
 
 // Get elements
 export const regionMessages = document.getElementById('region-messages') as HTMLElement;
@@ -84,14 +95,44 @@ export const allianceMessages = document.getElementById('alliance-messages') as 
 export const chatInput = document.getElementById('chatInput') as HTMLTextAreaElement;
 export const sendButton = document.getElementById('sendButton') as HTMLButtonElement;
 export const closeButton = modal.querySelector('.livechat-close') as HTMLButtonElement;
+const settingsButton = modal.querySelector('.livechat-settings-btn') as HTMLButtonElement;
+const settingsCloseButton = settingsModal.querySelector('.livechat-settings-close') as HTMLButtonElement;
+const enterToSendCheckbox = document.getElementById('enter-to-send') as HTMLInputElement;
 export const userInfo = document.getElementById('userInfo') as HTMLElement;
 export const chatTabs = document.getElementById('chatTabs') as HTMLElement;
+
+// Load settings on startup
+loadSettings();
+const settings = getSettings();
+enterToSendCheckbox.checked = settings.enterToSend;
+
+// Settings modal listeners
+settingsButton.addEventListener('click', () => {
+    settingsModal.style.display = 'flex';
+});
+
+settingsCloseButton.addEventListener('click', () => {
+    settingsModal.style.display = 'none';
+});
+
+settingsModal.addEventListener('click', (e) => {
+    if (e.target === settingsModal) {
+        settingsModal.style.display = 'none';
+    }
+});
+
+// Setting change listener
+enterToSendCheckbox.addEventListener('change', (e) => {
+    setSettings({ enterToSend: (e.target as HTMLInputElement).checked });
+});
+
 
 // Auto-resize textarea
 chatInput.addEventListener('input', function() {
     this.style.height = 'auto';
     this.style.height = Math.min(this.scrollHeight, 80) + 'px';
 });
+
 
 // Initialize user data
 export async function initializeUserData() {
