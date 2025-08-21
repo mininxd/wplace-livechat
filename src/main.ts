@@ -1,5 +1,6 @@
 import './style.css'
 import { startDataPolling } from './api'
+import { getSettings } from './state'
 import {
     fab,
     modal,
@@ -39,7 +40,7 @@ modal.addEventListener('click', (e) => {
 });
 sendButton.addEventListener('click', handleSendMessage);
 chatInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (getSettings().enterToSend && e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         handleSendMessage();
     }
