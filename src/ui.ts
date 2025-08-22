@@ -68,7 +68,6 @@ modal.innerHTML = `
             </div>
             <button class="livechat-send" id="sendButton" disabled>
                 <i class="material-icons">send</i>
-                <div class="livechat-char-counter" id="charCounter">0/128</div>
             </button>
         </div>
     </div>
@@ -99,7 +98,6 @@ export const regionMessages = document.getElementById('region-messages') as HTML
 export const allianceMessages = document.getElementById('alliance-messages') as HTMLElement;
 export const chatInput = document.getElementById('chatInput') as HTMLTextAreaElement;
 export const sendButton = document.getElementById('sendButton') as HTMLButtonElement;
-export const charCounter = document.getElementById('charCounter') as HTMLDivElement;
 export const closeButton = modal.querySelector('.livechat-close') as HTMLButtonElement;
 const settingsButton = modal.querySelector('.livechat-settings-btn') as HTMLButtonElement;
 const settingsCloseButton = settingsModal.querySelector('.livechat-settings-close') as HTMLButtonElement;
@@ -133,18 +131,18 @@ enterToSendCheckbox.addEventListener('change', (e) => {
 });
 
 
-// Auto-resize textarea
+// Auto-resize textarea and handle character limit
 chatInput.addEventListener('input', function() {
     this.style.height = 'auto';
     this.style.height = Math.min(this.scrollHeight, 80) + 'px';
 
-    // Update character counter
     const count = this.value.length;
-    charCounter.textContent = `${count}/128`;
     if (count > 128) {
-        charCounter.classList.add('error');
+        this.classList.add('input-error');
+        sendButton.disabled = true;
     } else {
-        charCounter.classList.remove('error');
+        this.classList.remove('input-error');
+        sendButton.disabled = false;
     }
 });
 
