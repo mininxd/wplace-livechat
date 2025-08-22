@@ -287,12 +287,27 @@ export function updateUserInfo(isLoggedIn?: boolean) {
 // Load and display messages
 export async function loadMessages() {
     const userData = getUserData();
-    const regionData = getRegionData();
     const currentChatRoom = getCurrentChatRoom();
+    const messagesContainer = currentChatRoom === 'region' ? regionMessages : allianceMessages;
+
+    // This must be the first check. If user is not logged in, nothing else matters.
+    if (!userData) {
+        messagesContainer.innerHTML = `
+            <div class="info-message">
+                <i class="material-icons">warning</i>
+                <div><strong>Please log in to use chat</strong></div>
+                <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">You need to be logged in to participate in chat.</div>
+            </div>
+        `;
+        chatInput.disabled = true;
+        sendButton.disabled = true;
+        return;
+    }
+
+    const regionData = getRegionData();
     const initialChatRoom = currentChatRoom;
     let chatRoomId: string | null = null;
     let chatRoomName = '';
-    const messagesContainer = currentChatRoom === 'region' ? regionMessages : allianceMessages;
 
     if (currentChatRoom === 'region') {
         if (!regionData) {
@@ -311,7 +326,7 @@ export async function loadMessages() {
         chatRoomId = regionData.name;
         chatRoomName = regionData.name;
     } else if (currentChatRoom === 'alliance') {
-        if (!userData || !userData.allianceId) {
+        if (!userData.allianceId) { // No need to check for userData again, we know it exists
              messagesContainer.innerHTML = `
                 <div class="info-message">
                     <i class="material-icons">warning</i>
@@ -324,19 +339,6 @@ export async function loadMessages() {
         }
         chatRoomId = `alliance_${userData.allianceId}`;
         chatRoomName = "Alliance Chat";
-    }
-
-    if (!userData) {
-        messagesContainer.innerHTML = `
-            <div class="info-message">
-                <i class="material-icons">warning</i>
-                <div><strong>Please log in to use chat</strong></div>
-                <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">You need to be logged in to participate in chat.</div>
-            </div>
-        `;
-        chatInput.disabled = true;
-        sendButton.disabled = true;
-        return;
     }
 
     const isInitialLoad = messagesContainer.querySelector('.chat-message') === null;
