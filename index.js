@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import rateLimit from "express-rate-limit";
 import cors from "cors";
 import helmet from "helmet";
+import xss from "xss-clean";
 
 const app = express();
 const prisma = new PrismaClient();
@@ -10,11 +11,32 @@ const prisma = new PrismaClient();
 app.use(express.json());
 
 // Security middlewares
-app.use(helmet()); // secure headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      imgSrc: ["'self'"],
+      connectSrc: ["'self'", "https://wplace.live"],
+    },
+  },
+}));
+app.use(xss());
 app.use(cors({
-//  origin: ["https://wplace.live"],
+  origin: ["https://wplace.live"],
   methods: ["GET", "POST"]
 }));
+
+// Global rate limiter
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  standardHeaders: true, // return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // disable the `X-RateLimit-*` headers
+});
+app.use(limiter);
 
 
 // Rate limiter for POST /send
@@ -61,10 +83,10 @@ app.post("/send", sendLimiter, async (req, res) => {
   const { uid, name, region, messages } = req.body;
 
   if (
-    !uid || typeof uid !== "string" ||
-    !name || typeof name !== "string" ||
-    !region || typeof region !== "string" ||
-    !messages || typeof messages !== "string"
+    !uid || typeof uid !== "string" || uid.trim() === "" ||
+    !name || typeof name !== "string" || name.trim() === "" ||
+    !region || typeof region !== "string" || region.trim() === "" ||
+    !messages || typeof messages !== "string" || messages.trim() === ""
   ) {
     return res.status(400).json({ error: "Invalid input" });
   }
