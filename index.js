@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import rateLimit from "express-rate-limit";
 import cors from "cors";
 import helmet from "helmet";
-import xss from "xss-clean";
+// import xss from "xss-clean";
 
 const app = express();
 const prisma = new PrismaClient();
@@ -23,7 +23,7 @@ app.use(helmet({
     },
   },
 }));
-app.use(xss());
+// app.use(xss());
 app.use(cors({
   origin: ["https://wplace.live"],
   methods: ["GET", "POST"]
