@@ -348,7 +348,8 @@
 }
 
 .livechat-input {
-    flex: 1;
+    width: 100%;
+    box-sizing: border-box;
     border: 2px solid var(--sys-color-surface-variant);
     border-radius: 28px;
     padding: 14px 20px;
