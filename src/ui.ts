@@ -65,9 +65,11 @@ modal.innerHTML = `
         <div class="livechat-input-area">
             <div class="livechat-input-wrapper">
                 <textarea class="livechat-input" placeholder="Type your message..." rows="1" id="chatInput" disabled maxlength="128"></textarea>
-                <div class="livechat-char-counter" id="charCounter">0/128</div>
             </div>
-            <button class="livechat-send" id="sendButton" disabled><i class="material-icons">send</i></button>
+            <button class="livechat-send" id="sendButton" disabled>
+                <i class="material-icons">send</i>
+                <div class="livechat-char-counter" id="charCounter">0/128</div>
+            </button>
         </div>
     </div>
 `;
