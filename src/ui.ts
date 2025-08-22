@@ -173,7 +173,8 @@ async function preloadAllianceMessages() {
 export async function initializeUserData() {
     try {
         const userData = await fetchAPI('https://backend.wplace.live/me');
-        if (userData) {
+        // Add a more robust check to ensure userData is a valid object with an id
+        if (userData && userData.id) {
             setUserData(userData);
             if (debug) console.log("User data loaded:", userData);
 
@@ -193,11 +194,18 @@ export async function initializeUserData() {
 
             updateUserInfo(true);
             return true;
+        } else {
+            // If userData is null, undefined, or doesn't have an id, treat as not logged in
+            setUserData(null);
+            updateUserInfo(false);
+            return false;
         }
     } catch (error) {
         if (debug) console.error('Error loading user data:', error);
+        setUserData(null);
+        updateUserInfo(false);
+        return false;
     }
-    return false;
 }
 
 // Add debug info to user info display
