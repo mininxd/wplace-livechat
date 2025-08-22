@@ -1,4 +1,4 @@
-import { getSettings, loadSettings, setSettings, getUserData, getRegionData, getAllianceData, getCurrentChatRoom, setCurrentChatRoom, setUserData, setAllianceData } from './state';
+import { getSettings, loadSettings, setSettings, getUserData, getRegionData, getAllianceData, getCurrentChatRoom, setCurrentChatRoom, setUserData, setAllianceData, getPreloadedAllianceMessages, setPreloadedAllianceMessages } from './state';
 import { fetchMessages, sendMessage, fetchAPI } from './api';
 import { gsap } from 'gsap';
 import { Draggable } from 'gsap/Draggable';
@@ -63,7 +63,10 @@ modal.innerHTML = `
             </div>
         </div>
         <div class="livechat-input-area">
-            <textarea class="livechat-input" placeholder="Type your message..." rows="1" id="chatInput" disabled></textarea>
+            <div class="livechat-input-wrapper">
+                <textarea class="livechat-input" placeholder="Type your message..." rows="1" id="chatInput" disabled maxlength="128"></textarea>
+                <div class="livechat-char-counter" id="charCounter">0/128</div>
+            </div>
             <button class="livechat-send" id="sendButton" disabled><i class="material-icons">send</i></button>
         </div>
     </div>
@@ -94,6 +97,7 @@ export const regionMessages = document.getElementById('region-messages') as HTML
 export const allianceMessages = document.getElementById('alliance-messages') as HTMLElement;
 export const chatInput = document.getElementById('chatInput') as HTMLTextAreaElement;
 export const sendButton = document.getElementById('sendButton') as HTMLButtonElement;
+export const charCounter = document.getElementById('charCounter') as HTMLDivElement;
 export const closeButton = modal.querySelector('.livechat-close') as HTMLButtonElement;
 const settingsButton = modal.querySelector('.livechat-settings-btn') as HTMLButtonElement;
 const settingsCloseButton = settingsModal.querySelector('.livechat-settings-close') as HTMLButtonElement;
@@ -131,8 +135,39 @@ enterToSendCheckbox.addEventListener('change', (e) => {
 chatInput.addEventListener('input', function() {
     this.style.height = 'auto';
     this.style.height = Math.min(this.scrollHeight, 80) + 'px';
+
+    // Update character counter
+    const count = this.value.length;
+    charCounter.textContent = `${count}/128`;
+    if (count > 128) {
+        charCounter.classList.add('error');
+    } else {
+        charCounter.classList.remove('error');
+    }
 });
 
+
+// Preload alliance messages
+async function preloadAllianceMessages() {
+    const userData = getUserData();
+    if (!userData || !userData.allianceId) {
+        if (debug) console.log("User is not in an alliance, skipping preload.");
+        return;
+    }
+
+    const chatRoomId = `alliance_${userData.allianceId}`;
+    if (debug) console.log(`Preloading messages for alliance chat: ${chatRoomId}`);
+
+    try {
+        const response = await fetchMessages(chatRoomId);
+        if (response && response.data) {
+            setPreloadedAllianceMessages(response);
+            if (debug) console.log(`Successfully preloaded ${response.data.length} alliance messages.`);
+        }
+    } catch (error) {
+        if (debug) console.error('Error preloading alliance messages:', error);
+    }
+}
 
 // Initialize user data
 export async function initializeUserData() {
@@ -145,9 +180,11 @@ export async function initializeUserData() {
             if (userData.allianceId) {
                 try {
                     const allianceData = await fetchAPI(`https://backend.wplace.live/alliance`);
-                    if (allianceData && debug) {
+                    if (allianceData) {
                         setAllianceData(allianceData);
-                        console.log("Alliance data loaded:", allianceData);
+                        if (debug) console.log("Alliance data loaded:", allianceData);
+                        // Preload messages now that we have alliance data
+                        preloadAllianceMessages();
                     }
                 } catch (error) {
                     if (debug) console.error('Error loading alliance data:', error);
@@ -296,7 +333,17 @@ export async function loadMessages() {
             `;
         }
 
-        const response = await fetchMessages(chatRoomId as string);
+        let response: any;
+        const preloadedMessages = getPreloadedAllianceMessages();
+
+        // Use preloaded messages only on the initial load of the alliance chat
+        if (currentChatRoom === 'alliance' && preloadedMessages && isInitialLoad) {
+            if (debug) console.log("Using preloaded alliance messages.");
+            response = preloadedMessages;
+            setPreloadedAllianceMessages(null); // Clear after use
+        } else {
+            response = await fetchMessages(chatRoomId as string);
+        }
 
         if (getCurrentChatRoom() !== initialChatRoom) {
             if (debug) console.log(`Room changed from ${initialChatRoom} to ${getCurrentChatRoom()}. Aborting message load.`);

@@ -1,7 +1,16 @@
 let userData: any = null;
 let regionData: any = null;
 let allianceData: any = null;
+let preloadedAllianceMessages: any = null;
 let currentChatRoom = 'region'; // 'region' or 'alliance'
+
+export function getPreloadedAllianceMessages() {
+    return preloadedAllianceMessages;
+}
+
+export function setPreloadedAllianceMessages(messages: any) {
+    preloadedAllianceMessages = messages;
+}
 
 export function getUserData() {
     return userData;
