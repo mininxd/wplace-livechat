@@ -400,11 +400,12 @@ export async function loadMessages() {
     } catch (error) {
         if (debug) console.error('Error loading messages:', error);
         if (isInitialLoad) {
+            // This error often means the user is not logged in.
             messagesContainer.innerHTML = `
                 <div class="info-message">
                     <i class="material-icons">warning</i>
-                    <div><strong>Failed to load messages</strong></div>
-                    <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Please check your connection and try again.</div>
+                    <div><strong>Please log in to use chat</strong></div>
+                    <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">You need to be logged in to participate in chat.</div>
                 </div>
             `;
             chatInput.disabled = true;
