@@ -193,9 +193,26 @@ export async function initializeUserData() {
 
             updateUserInfo();
             return true;
+        } else {
+            // User not logged in, update UI accordingly
+            userInfo.innerHTML = `
+                <h3><i class="material-icons">warning</i> Not Logged In</h3>
+                <div class="livechat-user-details">Login into wplace to chat</div>
+            `;
+            chatTabs.innerHTML = ''; // Clear tabs
+            chatInput.disabled = true;
+            sendButton.disabled = true;
         }
     } catch (error) {
         if (debug) console.error('Error loading user data:', error);
+        // Also update UI on error
+        userInfo.innerHTML = `
+            <h3><i class="material-icons">warning</i> Not Logged In</h3>
+            <div class="livechat-user-details">Login into wplace to chat</div>
+        `;
+        chatTabs.innerHTML = ''; // Clear tabs
+        chatInput.disabled = true;
+        sendButton.disabled = true;
     }
     return false;
 }
