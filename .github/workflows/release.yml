@@ -2,15 +2,6 @@ name: Create Release
 
 on:
   workflow_dispatch:
-    inputs:
-      title:
-        description: "Release title"
-        required: true
-        type: string
-      body:
-        description: "Release notes / body"
-        required: true
-        type: string
 
 jobs:
   build-and-release:
@@ -26,31 +17,23 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build userscript
         run: npm run build
 
       - name: Get short SHA
-        id: vars
-        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-
-      - name: Create Git tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag ${{ env.sha_short }}
-          git push origin ${{ env.sha_short }}
+        run: echo "sha_short=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: dist/wplace_livechat.user.js
-          title: ${{ github.event.inputs.title }}
-          body: ${{ github.event.inputs.body }}
+          title: "Release"
+          body: ""
           tag_name: ${{ env.sha_short }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
