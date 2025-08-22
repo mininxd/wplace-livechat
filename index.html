@@ -9,5 +9,10 @@
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
+    <script>
+        window.va = window.va || function () { (window.va.q = window.va.q || []).push(arguments); };
+        window.va('event', 'page_view', { path: location.pathname });
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
   </body>
 </html>

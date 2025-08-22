@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/wplace_livechat.user.js",
+      "permanent": false
+    }
+  ]
+}
