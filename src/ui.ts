@@ -191,34 +191,17 @@ export async function initializeUserData() {
                 }
             }
 
-            updateUserInfo();
+            updateUserInfo(true);
             return true;
-        } else {
-            // User not logged in, update UI accordingly
-            userInfo.innerHTML = `
-                <h3><i class="material-icons">warning</i> Not Logged In</h3>
-                <div class="livechat-user-details">Login into wplace to chat</div>
-            `;
-            chatTabs.innerHTML = ''; // Clear tabs
-            chatInput.disabled = true;
-            sendButton.disabled = true;
         }
     } catch (error) {
         if (debug) console.error('Error loading user data:', error);
-        // Also update UI on error
-        userInfo.innerHTML = `
-            <h3><i class="material-icons">warning</i> Not Logged In</h3>
-            <div class="livechat-user-details">Login into wplace to chat</div>
-        `;
-        chatTabs.innerHTML = ''; // Clear tabs
-        chatInput.disabled = true;
-        sendButton.disabled = true;
     }
     return false;
 }
 
 // Add debug info to user info display
-export function updateUserInfo() {
+export function updateUserInfo(isLoggedIn?: boolean) {
     const userData = getUserData();
     const regionData = getRegionData();
     const allianceData = getAllianceData();
@@ -256,11 +239,22 @@ export function updateUserInfo() {
             <div class="game-status"><i class="material-icons" style="color: #4CAF50; font-size: 8px;">circle</i> Level ${Math.floor(userData.level)}</div>
         `;
     } else {
-        userInfo.innerHTML = `
-            <h3><i class="material-icons">person</i> Loading...</h3>
-            <div class="livechat-user-details"><i class="material-icons">place</i> Region: ...</div>
-            <div class="game-status"><i class="material-icons" style="color: #FF9800; font-size: 8px;">circle</i> Loading</div>
-        `;
+        if (isLoggedIn === false) {
+            // Explicitly not logged in
+            userInfo.innerHTML = `
+                <h3><i class="material-icons">warning</i> Login required</h3>
+                <div class="livechat-user-details">Please login into wplace to use the chat.</div>
+            `;
+            chatTabs.innerHTML = ''; // Clear tabs
+            return; // Stop here, no tabs to update
+        } else {
+            // Still loading or unknown state
+            userInfo.innerHTML = `
+                <h3><i class="material-icons">person</i> Loading...</h3>
+                <div class="livechat-user-details"><i class="material-icons">place</i> Region: ...</div>
+                <div class="game-status"><i class="material-icons" style="color: #FF9800; font-size: 8px;">circle</i> Loading</div>
+            `;
+        }
     }
 
     // Update tabs
@@ -578,11 +572,17 @@ export async function handleFabClick() {
         allowEventDefault: true
     });
 
-    const userData = getUserData();
+    let userData = getUserData();
 
     // Initialize user data if not already loaded
     if (!userData) {
-        await initializeUserData();
+        const loggedIn = await initializeUserData();
+        if (!loggedIn) {
+            updateUserInfo(false);
+            await loadMessages(); // This will show the "Please log in" message
+            return; // Stop further execution
+        }
+        userData = getUserData(); // Refresh userData after successful login
     }
 
     // Set initial chat room
@@ -597,7 +597,7 @@ export async function handleFabClick() {
         allianceMessages.style.display = 'none';
     }
 
-    updateUserInfo();
+    updateUserInfo(true); // User is definitely logged in at this point
     await loadMessages();
     startAutoRefresh();
 
