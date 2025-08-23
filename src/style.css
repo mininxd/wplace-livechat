@@ -170,13 +170,7 @@
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
-}
-
-.settings-list {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    margin-bottom: 24px;
+    /* Makes it clear the whole row is clickable */
 }
 
 /* Material 3 Switch Styles */
@@ -227,6 +221,7 @@
     transition: all 0.2s;
 }
 
+/* Checked state */
 .m3-switch input:checked+.m3-switch-track {
     background-color: var(--sys-color-primary);
     border-color: var(--sys-color-primary);
@@ -242,56 +237,9 @@
     background-color: var(--sys-color-on-primary);
 }
 
+/* Hover state */
 .setting-item:hover .m3-switch-thumb {
     box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
-}
-
-.theme-selector h5 {
-    margin-top: 24px;
-    margin-bottom: 12px;
-    border-bottom: 1px solid var(--sys-color-outline);
-    padding-bottom: 8px;
-}
-
-.theme-grid {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 16px;
-    align-items: center;
-}
-
-.template-colors {
-    display: flex;
-    gap: 12px;
-}
-
-.theme-option {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    cursor: pointer;
-    border: 2px solid var(--sys-color-surface-variant);
-    transition: all 0.2s;
-}
-
-.theme-option.active, .theme-option:hover {
-    border-color: var(--sys-color-primary);
-    transform: scale(1.1);
-}
-
-.color-picker-parent {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background-color: var(--sys-color-surface-variant);
-    padding: 8px 12px;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.color-picker-parent:hover {
-    background-color: var(--sys-color-surface-container-highest);
 }
 
 .livechat-settings-close {

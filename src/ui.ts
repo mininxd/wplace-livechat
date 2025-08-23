@@ -2,46 +2,10 @@ import { getSettings, loadSettings, setSettings, getUserData, getRegionData, get
 import { fetchMessages, sendMessage, fetchAPI } from './api';
 import { gsap } from 'gsap';
 import { Draggable } from 'gsap/Draggable';
-import Picker from 'vanilla-picker/csp';
-import 'vanilla-picker/dist/vanilla-picker.csp.css';
 
 gsap.registerPlugin(Draggable);
 
 const debug = true;
-
-/**
- * Converts a hex color to an RGB object.
- * @param hex The hex color string (e.g., "#RRGGBB").
- * @returns An object with r, g, b properties, or null if invalid.
- */
-function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-        ? {
-              r: parseInt(result[1], 16),
-              g: parseInt(result[2], 16),
-              b: parseInt(result[3], 16),
-          }
-        : null;
-}
-
-/**
- * Adjusts the shade of a color.
- * @param color The hex color string.
- * @param percent The percentage to lighten or darken. Negative values darken, positive values lighten.
- * @returns The new hex color string.
- */
-function adjustShade(color: string, percent: number): string {
-    let { r, g, b } = hexToRgb(color)!;
-
-    r = Math.round(Math.min(255, Math.max(0, r + (255 * percent) / 100)));
-    g = Math.round(Math.min(255, Math.max(0, g + (255 * percent) / 100)));
-    b = Math.round(Math.min(255, Math.max(0, b + (255 * percent) / 100)));
-
-    const toHex = (c: number) => `0${c.toString(16)}`.slice(-2);
-
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-}
 
 // Create floating action button
 export const fab = document.createElement('button');
@@ -120,33 +84,16 @@ settingsModal.style.display = 'none'; // Initially hidden
 settingsModal.innerHTML = `
     <div class="livechat-settings-content">
         <h4>Chat Settings</h4>
-        <div class="settings-list">
-             <label class="setting-item">
-                <span>Press Enter to send</span>
-                <div class="m3-switch">
-                    <input type="checkbox" id="enter-to-send" />
-                    <div class="m3-switch-track"></div>
-                    <div class="m3-switch-thumb-container">
-                        <div class="m3-switch-thumb"></div>
-                    </div>
-                </div>
-            </label>
-        </div>
-        <div class="theme-selector">
-            <h5>Theme Color</h5>
-            <div class="theme-grid">
-                <div class="template-colors">
-                    <div class="theme-option" data-color="#1a73e8" style="background-color: #1a73e8;"></div>
-                    <div class="theme-option" data-color="#1e8e3e" style="background-color: #1e8e3e;"></div>
-                    <div class="theme-option" data-color="#8e44ad" style="background-color: #8e44ad;"></div>
-                    <div class="theme-option" data-color="#d35400" style="background-color: #d35400;"></div>
-                </div>
-                <div id="color-picker-parent" class="color-picker-parent">
-                    <i class="material-icons">colorize</i>
-                    <span>Custom</span>
+        <label class="setting-item">
+            <span>Press Enter to send</span>
+            <div class="m3-switch">
+                <input type="checkbox" id="enter-to-send" />
+                <div class="m3-switch-track"></div>
+                <div class="m3-switch-thumb-container">
+                    <div class="m3-switch-thumb"></div>
                 </div>
             </div>
-        </div>
+        </label>
         <button class="livechat-settings-close"><i class="material-icons">close</i></button>
     </div>
 `;
@@ -168,54 +115,6 @@ export const chatTabs = document.getElementById('chatTabs') as HTMLElement;
 loadSettings();
 const settings = getSettings();
 enterToSendCheckbox.checked = settings.enterToSend;
-
-// --- Theme & Color Picker Logic ---
-const colorPickerParent = document.getElementById('color-picker-parent') as HTMLElement;
-const templateColorsContainer = document.querySelector('.template-colors') as HTMLElement;
-
-function applyThemeColor(color: string) {
-    if (!hexToRgb(color)) return;
-
-    const primaryDark = adjustShade(color, -10);
-    const primaryContainer = adjustShade(color, 85);
-
-    document.documentElement.style.setProperty('--sys-color-primary', color);
-    document.documentElement.style.setProperty('--sys-color-primary-dark', primaryDark);
-    document.documentElement.style.setProperty('--sys-color-primary-container', primaryContainer);
-
-    // Update active class on template colors
-    const themeOptions = document.querySelectorAll('.theme-option');
-    themeOptions.forEach(option => {
-        option.classList.toggle('active', option.getAttribute('data-color') === color);
-    });
-}
-
-const picker = new Picker({
-    parent: colorPickerParent,
-    popup: 'right',
-    alpha: false,
-    editor: false,
-    onChange: (color) => {
-        applyThemeColor(color.hex.slice(0, 7));
-    },
-    onDone: (color) => {
-        setSettings({ primaryColor: color.hex.slice(0, 7) });
-    },
-});
-
-templateColorsContainer.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement;
-    if (target.classList.contains('theme-option')) {
-        const color = target.getAttribute('data-color');
-        if (color) {
-            picker.setColor(color); // This will trigger onChange and onDone
-        }
-    }
-});
-
-// Apply initial theme
-applyThemeColor(settings.primaryColor);
-picker.setColor(settings.primaryColor, true);
 
 // Settings modal listeners
 settingsButton.addEventListener('click', () => {

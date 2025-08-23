@@ -18,7 +18,6 @@
   },
   "dependencies": {
     "@vercel/analytics": "^1.5.0",
-    "gsap": "^3.13.0",
-    "vanilla-picker": "^2.12.3"
+    "gsap": "^3.13.0"
   }
 }
