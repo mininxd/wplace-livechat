@@ -47,7 +47,6 @@ export function setCurrentChatRoom(room: string) {
 // --- Settings ---
 let settings = {
     enterToSend: true,
-    primaryColor: '#1a73e8',
 };
 
 export const getSettings = () => settings;

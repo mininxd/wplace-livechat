@@ -17,10 +17,10 @@ export default defineConfig({
       build: {
         fileName: 'wplace_livechat.user.js',
         externalGlobals: {
-          '@melloware/coloris': cdn.jsdelivr('Coloris', 'dist/coloris.min.js'),
+          'vanilla-picker/csp': cdn.jsdelivr('Picker', 'dist/vanilla-picker.csp.min.js'),
         },
         externalResource: {
-          '@melloware/coloris/dist/coloris.css': cdn.jsdelivr(),
+            'vanilla-picker/dist/vanilla-picker.csp.css': cdn.jsdelivr(),
         },
       },
     }),

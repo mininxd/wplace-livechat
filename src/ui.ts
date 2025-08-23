@@ -2,8 +2,8 @@ import { getSettings, loadSettings, setSettings, getUserData, getRegionData, get
 import { fetchMessages, sendMessage, fetchAPI } from './api';
 import { gsap } from 'gsap';
 import { Draggable } from 'gsap/Draggable';
-import Coloris from '@melloware/coloris';
-import '@melloware/coloris/dist/coloris.css';
+import Picker from 'vanilla-picker/csp';
+import 'vanilla-picker/dist/vanilla-picker.csp.css';
 
 gsap.registerPlugin(Draggable);
 
@@ -134,8 +134,17 @@ settingsModal.innerHTML = `
         </div>
         <div class="theme-selector">
             <h5>Theme Color</h5>
-            <div class="color-picker-container">
-                <input type="text" id="theme-color-picker" autocomplete="off">
+            <div class="theme-grid">
+                <div class="template-colors">
+                    <div class="theme-option" data-color="#1a73e8" style="background-color: #1a73e8;"></div>
+                    <div class="theme-option" data-color="#1e8e3e" style="background-color: #1e8e3e;"></div>
+                    <div class="theme-option" data-color="#8e44ad" style="background-color: #8e44ad;"></div>
+                    <div class="theme-option" data-color="#d35400" style="background-color: #d35400;"></div>
+                </div>
+                <div id="color-picker-parent" class="color-picker-parent">
+                    <i class="material-icons">colorize</i>
+                    <span>Custom</span>
+                </div>
             </div>
         </div>
         <button class="livechat-settings-close"><i class="material-icons">close</i></button>
@@ -155,6 +164,15 @@ const enterToSendCheckbox = document.getElementById('enter-to-send') as HTMLInpu
 export const userInfo = document.getElementById('userInfo') as HTMLElement;
 export const chatTabs = document.getElementById('chatTabs') as HTMLElement;
 
+// Load settings on startup
+loadSettings();
+const settings = getSettings();
+enterToSendCheckbox.checked = settings.enterToSend;
+
+// --- Theme & Color Picker Logic ---
+const colorPickerParent = document.getElementById('color-picker-parent') as HTMLElement;
+const templateColorsContainer = document.querySelector('.template-colors') as HTMLElement;
+
 function applyThemeColor(color: string) {
     if (!hexToRgb(color)) return;
 
@@ -164,35 +182,40 @@ function applyThemeColor(color: string) {
     document.documentElement.style.setProperty('--sys-color-primary', color);
     document.documentElement.style.setProperty('--sys-color-primary-dark', primaryDark);
     document.documentElement.style.setProperty('--sys-color-primary-container', primaryContainer);
+
+    // Update active class on template colors
+    const themeOptions = document.querySelectorAll('.theme-option');
+    themeOptions.forEach(option => {
+        option.classList.toggle('active', option.getAttribute('data-color') === color);
+    });
 }
 
-// Load settings on startup
-loadSettings();
-const settings = getSettings();
-enterToSendCheckbox.checked = settings.enterToSend;
-applyThemeColor(settings.primaryColor);
-
-
-Coloris.init();
-Coloris({
-    el: '#theme-color-picker',
-    themeMode: 'dark',
+const picker = new Picker({
+    parent: colorPickerParent,
+    popup: 'right',
     alpha: false,
-    swatches: [
-        '#1a73e8',
-        '#1e8e3e',
-        '#8e44ad',
-        '#d35400',
-        '#c0392b',
-        '#2980b9',
-        '#f39c12',
-        '#d35400',
-    ],
+    editor: false,
     onChange: (color) => {
-        applyThemeColor(color);
-        setSettings({ primaryColor: color });
+        applyThemeColor(color.hex.slice(0, 7));
+    },
+    onDone: (color) => {
+        setSettings({ primaryColor: color.hex.slice(0, 7) });
+    },
+});
+
+templateColorsContainer.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.classList.contains('theme-option')) {
+        const color = target.getAttribute('data-color');
+        if (color) {
+            picker.setColor(color); // This will trigger onChange and onDone
+        }
     }
 });
+
+// Apply initial theme
+applyThemeColor(settings.primaryColor);
+picker.setColor(settings.primaryColor, true);
 
 // Settings modal listeners
 settingsButton.addEventListener('click', () => {

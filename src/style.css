@@ -253,31 +253,45 @@
     padding-bottom: 8px;
 }
 
-.color-picker-container {
-    display: flex;
-    justify-content: center;
+.theme-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: center;
 }
 
-/* Styling for the Coloris trigger button */
-.clr-field {
-    width: 100%;
-    height: 40px;
-    padding: 0 12px;
-    border: 2px solid var(--sys-color-outline);
-    border-radius: 8px;
-    background-color: var(--sys-color-surface);
-    color: var(--sys-color-on-surface);
-    font-family: 'Rubik', sans-serif;
-    font-size: 16px;
+.template-colors {
+    display: flex;
+    gap: 12px;
+}
+
+.theme-option {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
     cursor: pointer;
+    border: 2px solid var(--sys-color-surface-variant);
+    transition: all 0.2s;
+}
+
+.theme-option.active, .theme-option:hover {
+    border-color: var(--sys-color-primary);
+    transform: scale(1.1);
+}
+
+.color-picker-parent {
     display: flex;
     align-items: center;
     gap: 8px;
+    background-color: var(--sys-color-surface-variant);
+    padding: 8px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.2s;
 }
 
-.clr-field .clr-preview {
-    width: 24px;
-    height: 24px;
+.color-picker-parent:hover {
+    background-color: var(--sys-color-surface-container-highest);
 }
 
 .livechat-settings-close {
