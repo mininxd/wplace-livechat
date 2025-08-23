@@ -170,7 +170,13 @@
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
-    /* Makes it clear the whole row is clickable */
+}
+
+.settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
 }
 
 /* Material 3 Switch Styles */
@@ -221,7 +227,6 @@
     transition: all 0.2s;
 }
 
-/* Checked state */
 .m3-switch input:checked+.m3-switch-track {
     background-color: var(--sys-color-primary);
     border-color: var(--sys-color-primary);
@@ -237,16 +242,8 @@
     background-color: var(--sys-color-on-primary);
 }
 
-/* Hover state */
 .setting-item:hover .m3-switch-thumb {
     box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
-}
-
-.settings-list {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    margin-bottom: 24px;
 }
 
 .theme-selector h5 {
@@ -256,37 +253,31 @@
     padding-bottom: 8px;
 }
 
-.color-picker-wrapper {
+.color-picker-container {
+    display: flex;
+    justify-content: center;
+}
+
+/* Styling for the Coloris trigger button */
+.clr-field {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: 2px solid var(--sys-color-outline);
+    border-radius: 8px;
+    background-color: var(--sys-color-surface);
+    color: var(--sys-color-on-surface);
+    font-family: 'Rubik', sans-serif;
+    font-size: 16px;
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
 }
 
-#theme-color-picker {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    width: 40px;
-    height: 40px;
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-}
-#theme-color-picker::-webkit-color-swatch {
-    border-radius: 50%;
-    border: 2px solid var(--sys-color-outline);
-}
-#theme-color-picker::-moz-color-swatch {
-    border-radius: 50%;
-    border: 2px solid var(--sys-color-outline);
-}
-
-#color-picker-label {
-    font-family: monospace;
-    font-size: 14px;
-    background-color: var(--sys-color-surface-variant);
-    padding: 4px 8px;
-    border-radius: 4px;
+.clr-field .clr-preview {
+    width: 24px;
+    height: 24px;
 }
 
 .livechat-settings-close {

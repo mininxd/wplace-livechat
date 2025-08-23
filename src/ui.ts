@@ -2,6 +2,8 @@ import { getSettings, loadSettings, setSettings, getUserData, getRegionData, get
 import { fetchMessages, sendMessage, fetchAPI } from './api';
 import { gsap } from 'gsap';
 import { Draggable } from 'gsap/Draggable';
+import Coloris from '@melloware/coloris';
+import '@melloware/coloris/dist/coloris.css';
 
 gsap.registerPlugin(Draggable);
 
@@ -119,7 +121,7 @@ settingsModal.innerHTML = `
     <div class="livechat-settings-content">
         <h4>Chat Settings</h4>
         <div class="settings-list">
-            <label class="setting-item">
+             <label class="setting-item">
                 <span>Press Enter to send</span>
                 <div class="m3-switch">
                     <input type="checkbox" id="enter-to-send" />
@@ -132,9 +134,8 @@ settingsModal.innerHTML = `
         </div>
         <div class="theme-selector">
             <h5>Theme Color</h5>
-            <div class="color-picker-wrapper">
-                <input type="color" id="theme-color-picker" value="#1a73e8">
-                <span id="color-picker-label">#1a73e8</span>
+            <div class="color-picker-container">
+                <input type="text" id="theme-color-picker" autocomplete="off">
             </div>
         </div>
         <button class="livechat-settings-close"><i class="material-icons">close</i></button>
@@ -151,11 +152,8 @@ export const closeButton = modal.querySelector('.livechat-close') as HTMLButtonE
 const settingsButton = modal.querySelector('.livechat-settings-btn') as HTMLButtonElement;
 const settingsCloseButton = settingsModal.querySelector('.livechat-settings-close') as HTMLButtonElement;
 const enterToSendCheckbox = document.getElementById('enter-to-send') as HTMLInputElement;
-const themeColorPicker = document.getElementById('theme-color-picker') as HTMLInputElement;
-const colorPickerLabel = document.getElementById('color-picker-label') as HTMLElement;
 export const userInfo = document.getElementById('userInfo') as HTMLElement;
 export const chatTabs = document.getElementById('chatTabs') as HTMLElement;
-
 
 function applyThemeColor(color: string) {
     if (!hexToRgb(color)) return;
@@ -166,14 +164,6 @@ function applyThemeColor(color: string) {
     document.documentElement.style.setProperty('--sys-color-primary', color);
     document.documentElement.style.setProperty('--sys-color-primary-dark', primaryDark);
     document.documentElement.style.setProperty('--sys-color-primary-container', primaryContainer);
-
-    // Update the color picker's value and label
-    if (themeColorPicker) {
-        themeColorPicker.value = color;
-    }
-    if (colorPickerLabel) {
-        colorPickerLabel.textContent = color;
-    }
 }
 
 // Load settings on startup
@@ -182,15 +172,26 @@ const settings = getSettings();
 enterToSendCheckbox.checked = settings.enterToSend;
 applyThemeColor(settings.primaryColor);
 
-// Theme color picker listener
-themeColorPicker.addEventListener('input', (e) => {
-    const newColor = (e.target as HTMLInputElement).value;
-    applyThemeColor(newColor);
-});
 
-themeColorPicker.addEventListener('change', (e) => {
-    const newColor = (e.target as HTMLInputElement).value;
-    setSettings({ primaryColor: newColor });
+Coloris.init();
+Coloris({
+    el: '#theme-color-picker',
+    themeMode: 'dark',
+    alpha: false,
+    swatches: [
+        '#1a73e8',
+        '#1e8e3e',
+        '#8e44ad',
+        '#d35400',
+        '#c0392b',
+        '#2980b9',
+        '#f39c12',
+        '#d35400',
+    ],
+    onChange: (color) => {
+        applyThemeColor(color);
+        setSettings({ primaryColor: color });
+    }
 });
 
 // Settings modal listeners
