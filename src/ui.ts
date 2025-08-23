@@ -7,36 +7,39 @@ gsap.registerPlugin(Draggable);
 
 const debug = true;
 
-const themes: Record<string, Record<string, string>> = {
-    default: {
-        '--sys-color-primary': '#1a73e8',
-        '--sys-color-primary-dark': '#1a63d3',
-        '--sys-color-on-primary': '#ffffff',
-        '--sys-color-primary-container': '#d6e2ff',
-        '--sys-color-secondary': '#565f71',
-    },
-    green: {
-        '--sys-color-primary': '#1e8e3e',
-        '--sys-color-primary-dark': '#187332',
-        '--sys-color-on-primary': '#ffffff',
-        '--sys-color-primary-container': '#d2f5d7',
-        '--sys-color-secondary': '#5c635d',
-    },
-    purple: {
-        '--sys-color-primary': '#8e44ad',
-        '--sys-color-primary-dark': '#703388',
-        '--sys-color-on-primary': '#ffffff',
-        '--sys-color-primary-container': '#f1dff8',
-        '--sys-color-secondary': '#655a68',
-    },
-    orange: {
-        '--sys-color-primary': '#d35400',
-        '--sys-color-primary-dark': '#a84300',
-        '--sys-color-on-primary': '#ffffff',
-        '--sys-color-primary-container': '#fbe5d8',
-        '--sys-color-secondary': '#6f5d52',
-    },
-};
+/**
+ * Converts a hex color to an RGB object.
+ * @param hex The hex color string (e.g., "#RRGGBB").
+ * @returns An object with r, g, b properties, or null if invalid.
+ */
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result
+        ? {
+              r: parseInt(result[1], 16),
+              g: parseInt(result[2], 16),
+              b: parseInt(result[3], 16),
+          }
+        : null;
+}
+
+/**
+ * Adjusts the shade of a color.
+ * @param color The hex color string.
+ * @param percent The percentage to lighten or darken. Negative values darken, positive values lighten.
+ * @returns The new hex color string.
+ */
+function adjustShade(color: string, percent: number): string {
+    let { r, g, b } = hexToRgb(color)!;
+
+    r = Math.round(Math.min(255, Math.max(0, r + (255 * percent) / 100)));
+    g = Math.round(Math.min(255, Math.max(0, g + (255 * percent) / 100)));
+    b = Math.round(Math.min(255, Math.max(0, b + (255 * percent) / 100)));
+
+    const toHex = (c: number) => `0${c.toString(16)}`.slice(-2);
+
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
 
 // Create floating action button
 export const fab = document.createElement('button');
@@ -128,12 +131,10 @@ settingsModal.innerHTML = `
             </label>
         </div>
         <div class="theme-selector">
-            <h5>Theme</h5>
-            <div class="theme-options">
-                <div class="theme-option" data-theme="default" style="background-color: #1a73e8;"></div>
-                <div class="theme-option" data-theme="green" style="background-color: #1e8e3e;"></div>
-                <div class="theme-option" data-theme="purple" style="background-color: #8e44ad;"></div>
-                <div class="theme-option" data-theme="orange" style="background-color: #d35400;"></div>
+            <h5>Theme Color</h5>
+            <div class="color-picker-wrapper">
+                <input type="color" id="theme-color-picker" value="#1a73e8">
+                <span id="color-picker-label">#1a73e8</span>
             </div>
         </div>
         <button class="livechat-settings-close"><i class="material-icons">close</i></button>
@@ -150,46 +151,47 @@ export const closeButton = modal.querySelector('.livechat-close') as HTMLButtonE
 const settingsButton = modal.querySelector('.livechat-settings-btn') as HTMLButtonElement;
 const settingsCloseButton = settingsModal.querySelector('.livechat-settings-close') as HTMLButtonElement;
 const enterToSendCheckbox = document.getElementById('enter-to-send') as HTMLInputElement;
+const themeColorPicker = document.getElementById('theme-color-picker') as HTMLInputElement;
+const colorPickerLabel = document.getElementById('color-picker-label') as HTMLElement;
 export const userInfo = document.getElementById('userInfo') as HTMLElement;
 export const chatTabs = document.getElementById('chatTabs') as HTMLElement;
+
+
+function applyThemeColor(color: string) {
+    if (!hexToRgb(color)) return;
+
+    const primaryDark = adjustShade(color, -10);
+    const primaryContainer = adjustShade(color, 85);
+
+    document.documentElement.style.setProperty('--sys-color-primary', color);
+    document.documentElement.style.setProperty('--sys-color-primary-dark', primaryDark);
+    document.documentElement.style.setProperty('--sys-color-primary-container', primaryContainer);
+
+    // Update the color picker's value and label
+    if (themeColorPicker) {
+        themeColorPicker.value = color;
+    }
+    if (colorPickerLabel) {
+        colorPickerLabel.textContent = color;
+    }
+}
 
 // Load settings on startup
 loadSettings();
 const settings = getSettings();
 enterToSendCheckbox.checked = settings.enterToSend;
-applyTheme(settings.theme);
+applyThemeColor(settings.primaryColor);
 
-// Function to apply a theme
-function applyTheme(themeName: string) {
-    const theme = themes[themeName] || themes.default;
-    for (const [property, value] of Object.entries(theme)) {
-        document.documentElement.style.setProperty(property, value);
-    }
+// Theme color picker listener
+themeColorPicker.addEventListener('input', (e) => {
+    const newColor = (e.target as HTMLInputElement).value;
+    applyThemeColor(newColor);
+});
 
-    // Update active theme option
-    const themeOptions = document.querySelectorAll('.theme-option');
-    themeOptions.forEach(option => {
-        option.classList.remove('active');
-        if (option.getAttribute('data-theme') === themeName) {
-            option.classList.add('active');
-        }
-    });
-}
-
-// Theme selection listener
-const themeOptions = document.querySelector('.theme-options');
-if (themeOptions) {
-    themeOptions.addEventListener('click', (e) => {
-        const target = e.target as HTMLElement;
-        if (target.classList.contains('theme-option')) {
-            const themeName = target.getAttribute('data-theme');
-            if (themeName) {
-                setSettings({ theme: themeName });
-                applyTheme(themeName);
-            }
-        }
-    });
-}
+themeColorPicker.addEventListener('change', (e) => {
+    const newColor = (e.target as HTMLInputElement).value;
+    setSettings({ primaryColor: newColor });
+});
 
 // Settings modal listeners
 settingsButton.addEventListener('click', () => {
