@@ -1,22 +1,28 @@
 import { defineConfig } from 'vite';
-import monkey from 'vite-plugin-monkey';
+import monkey, { cdn } from 'vite-plugin-monkey';
 
 export default defineConfig({
   plugins: [
-     monkey({
-       entry: 'src/main.ts',
-       userscript: {
-         name: 'Wplace Live Chats',
-         version: '2.1',
-         description: 'Livechat for wplace.live',
-         author: 'mininxd',
-         match: ['https://wplace.live/*', 'https://wplace.live'],
-         grant: 'GM_xmlhttpRequest',
-         connect: ['wplace-live-chat-server.vercel.app', 'backend.wplace.live'],
-       },
-         build: {
-         fileName: 'wplace_livechat.user.js',
-       },
-     }),
+    monkey({
+      entry: 'src/main.ts',
+      userscript: {
+        name: 'Wplace Live Chats',
+        version: '2.1',
+        description: 'Livechat for wplace.live',
+        author: 'mininxd',
+        match: ['https://wplace.live/*', 'https://wplace.live'],
+        grant: ['GM_xmlhttpRequest', 'GM_addStyle', 'GM_getResourceText'],
+        connect: ['wplace-live-chat-server.vercel.app', 'backend.wplace.live'],
+      },
+      build: {
+        fileName: 'wplace_livechat.user.js',
+        externalGlobals: {
+          '@melloware/coloris': cdn.jsdelivr('Coloris', 'dist/coloris.min.js'),
+        },
+        externalResource: {
+          '@melloware/coloris/dist/coloris.css': cdn.jsdelivr(),
+        },
+      },
+    }),
   ],
 });
