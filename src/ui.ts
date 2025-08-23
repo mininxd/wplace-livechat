@@ -84,9 +84,37 @@ settingsModal.style.display = 'none'; // Initially hidden
 settingsModal.innerHTML = `
     <div class="livechat-settings-content">
         <h4>Chat Settings</h4>
-        <div class="setting-item">
-            <label for="enter-to-send">Press Enter to send</label>
-            <input type="checkbox" id="enter-to-send" />
+        <div class="settings-list">
+            <label class="setting-item">
+                <span>Press Enter to send</span>
+                <div class="m3-switch">
+                    <input type="checkbox" id="enter-to-send" />
+                    <div class="m3-switch-track"></div>
+                    <div class="m3-switch-thumb-container">
+                        <div class="m3-switch-thumb"></div>
+                    </div>
+                </div>
+            </label>
+            <label class="setting-item">
+                <span>Disable Chat Notifications</span>
+                <div class="m3-switch">
+                    <input type="checkbox" id="disable-notifications" />
+                    <div class="m3-switch-track"></div>
+                    <div class="m3-switch-thumb-container">
+                        <div class="m3-switch-thumb"></div>
+                    </div>
+                </div>
+            </label>
+            <label class="setting-item">
+                <span>Profanity Filter</span>
+                <div class="m3-switch">
+                    <input type="checkbox" id="profanity-filter" />
+                    <div class="m3-switch-track"></div>
+                    <div class="m3-switch-thumb-container">
+                        <div class="m3-switch-thumb"></div>
+                    </div>
+                </div>
+            </label>
         </div>
         <button class="livechat-settings-close"><i class="material-icons">close</i></button>
     </div>
@@ -102,6 +130,8 @@ export const closeButton = modal.querySelector('.livechat-close') as HTMLButtonE
 const settingsButton = modal.querySelector('.livechat-settings-btn') as HTMLButtonElement;
 const settingsCloseButton = settingsModal.querySelector('.livechat-settings-close') as HTMLButtonElement;
 const enterToSendCheckbox = document.getElementById('enter-to-send') as HTMLInputElement;
+const disableNotificationsCheckbox = document.getElementById('disable-notifications') as HTMLInputElement;
+const profanityFilterCheckbox = document.getElementById('profanity-filter') as HTMLInputElement;
 export const userInfo = document.getElementById('userInfo') as HTMLElement;
 export const chatTabs = document.getElementById('chatTabs') as HTMLElement;
 
@@ -109,6 +139,8 @@ export const chatTabs = document.getElementById('chatTabs') as HTMLElement;
 loadSettings();
 const settings = getSettings();
 enterToSendCheckbox.checked = settings.enterToSend;
+disableNotificationsCheckbox.checked = settings.disableNotifications;
+profanityFilterCheckbox.checked = settings.profanityFilter;
 
 // Settings modal listeners
 settingsButton.addEventListener('click', () => {
@@ -128,6 +160,14 @@ settingsModal.addEventListener('click', (e) => {
 // Setting change listener
 enterToSendCheckbox.addEventListener('change', (e) => {
     setSettings({ enterToSend: (e.target as HTMLInputElement).checked });
+});
+
+disableNotificationsCheckbox.addEventListener('change', (e) => {
+    setSettings({ disableNotifications: (e.target as HTMLInputElement).checked });
+});
+
+profanityFilterCheckbox.addEventListener('change', (e) => {
+    setSettings({ profanityFilter: (e.target as HTMLInputElement).checked });
 });
 
 
@@ -173,8 +213,7 @@ async function preloadAllianceMessages() {
 export async function initializeUserData() {
     try {
         const userData = await fetchAPI('https://backend.wplace.live/me');
-        // Add a more robust check to ensure userData is a valid object with an id
-        if (userData && userData.id) {
+        if (userData) {
             setUserData(userData);
             if (debug) console.log("User data loaded:", userData);
 
@@ -192,24 +231,17 @@ export async function initializeUserData() {
                 }
             }
 
-            updateUserInfo(true);
+            updateUserInfo();
             return true;
-        } else {
-            // If userData is null, undefined, or doesn't have an id, treat as not logged in
-            setUserData(null);
-            updateUserInfo(false);
-            return false;
         }
     } catch (error) {
         if (debug) console.error('Error loading user data:', error);
-        setUserData(null);
-        updateUserInfo(false);
-        return false;
     }
+    return false;
 }
 
 // Add debug info to user info display
-export function updateUserInfo(isLoggedIn?: boolean) {
+export function updateUserInfo() {
     const userData = getUserData();
     const regionData = getRegionData();
     const allianceData = getAllianceData();
@@ -247,22 +279,11 @@ export function updateUserInfo(isLoggedIn?: boolean) {
             <div class="game-status"><i class="material-icons" style="color: #4CAF50; font-size: 8px;">circle</i> Level ${Math.floor(userData.level)}</div>
         `;
     } else {
-        if (isLoggedIn === false) {
-            // Explicitly not logged in
-            userInfo.innerHTML = `
-                <h3><i class="material-icons">warning</i> Login required</h3>
-                <div class="livechat-user-details">Please login into wplace to use the chat.</div>
-            `;
-            chatTabs.innerHTML = ''; // Clear tabs
-            return; // Stop here, no tabs to update
-        } else {
-            // Still loading or unknown state
-            userInfo.innerHTML = `
-                <h3><i class="material-icons">person</i> Loading...</h3>
-                <div class="livechat-user-details"><i class="material-icons">place</i> Region: ...</div>
-                <div class="game-status"><i class="material-icons" style="color: #FF9800; font-size: 8px;">circle</i> Loading</div>
-            `;
-        }
+        userInfo.innerHTML = `
+            <h3><i class="material-icons">person</i> Loading...</h3>
+            <div class="livechat-user-details"><i class="material-icons">place</i> Region: ...</div>
+            <div class="game-status"><i class="material-icons" style="color: #FF9800; font-size: 8px;">circle</i> Loading</div>
+        `;
     }
 
     // Update tabs
@@ -287,27 +308,12 @@ export function updateUserInfo(isLoggedIn?: boolean) {
 // Load and display messages
 export async function loadMessages() {
     const userData = getUserData();
-    const currentChatRoom = getCurrentChatRoom();
-    const messagesContainer = currentChatRoom === 'region' ? regionMessages : allianceMessages;
-
-    // This must be the first check. If user is not logged in, nothing else matters.
-    if (!userData) {
-        messagesContainer.innerHTML = `
-            <div class="info-message">
-                <i class="material-icons">warning</i>
-                <div><strong>Please log in to use chat</strong></div>
-                <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">You need to be logged in to participate in chat.</div>
-            </div>
-        `;
-        chatInput.disabled = true;
-        sendButton.disabled = true;
-        return;
-    }
-
     const regionData = getRegionData();
+    const currentChatRoom = getCurrentChatRoom();
     const initialChatRoom = currentChatRoom;
     let chatRoomId: string | null = null;
     let chatRoomName = '';
+    const messagesContainer = currentChatRoom === 'region' ? regionMessages : allianceMessages;
 
     if (currentChatRoom === 'region') {
         if (!regionData) {
@@ -326,7 +332,7 @@ export async function loadMessages() {
         chatRoomId = regionData.name;
         chatRoomName = regionData.name;
     } else if (currentChatRoom === 'alliance') {
-        if (!userData.allianceId) { // No need to check for userData again, we know it exists
+        if (!userData || !userData.allianceId) {
              messagesContainer.innerHTML = `
                 <div class="info-message">
                     <i class="material-icons">warning</i>
@@ -339,6 +345,19 @@ export async function loadMessages() {
         }
         chatRoomId = `alliance_${userData.allianceId}`;
         chatRoomName = "Alliance Chat";
+    }
+
+    if (!userData) {
+        messagesContainer.innerHTML = `
+            <div class="info-message">
+                <i class="material-icons">warning</i>
+                <div><strong>Please log in to use chat</strong></div>
+                <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">You need to be logged in to participate in chat.</div>
+            </div>
+        `;
+        chatInput.disabled = true;
+        sendButton.disabled = true;
+        return;
     }
 
     const isInitialLoad = messagesContainer.querySelector('.chat-message') === null;
@@ -410,12 +429,11 @@ export async function loadMessages() {
     } catch (error) {
         if (debug) console.error('Error loading messages:', error);
         if (isInitialLoad) {
-            // This error often means the user is not logged in.
             messagesContainer.innerHTML = `
                 <div class="info-message">
                     <i class="material-icons">warning</i>
-                    <div><strong>Please log in to use chat</strong></div>
-                    <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">You need to be logged in to participate in chat.</div>
+                    <div><strong>Failed to load messages</strong></div>
+                    <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Please check your connection and try again.</div>
                 </div>
             `;
             chatInput.disabled = true;
@@ -583,17 +601,11 @@ export async function handleFabClick() {
         allowEventDefault: true
     });
 
-    let userData = getUserData();
+    const userData = getUserData();
 
     // Initialize user data if not already loaded
     if (!userData) {
-        const loggedIn = await initializeUserData();
-        if (!loggedIn) {
-            updateUserInfo(false);
-            await loadMessages(); // This will show the "Please log in" message
-            return; // Stop further execution
-        }
-        userData = getUserData(); // Refresh userData after successful login
+        await initializeUserData();
     }
 
     // Set initial chat room
@@ -608,7 +620,7 @@ export async function handleFabClick() {
         allianceMessages.style.display = 'none';
     }
 
-    updateUserInfo(true); // User is definitely logged in at this point
+    updateUserInfo();
     await loadMessages();
     startAutoRefresh();
 

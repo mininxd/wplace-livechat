@@ -165,10 +165,88 @@
     padding-bottom: 12px;
 }
 
+.settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
 .setting-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    cursor: pointer;
+    /* Makes it clear the whole row is clickable */
+}
+
+/* Material 3 Switch Styles */
+.m3-switch {
+    position: relative;
+    width: 52px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+}
+
+.m3-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.m3-switch-track {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--sys-color-surface-variant);
+    border: 2px solid var(--sys-color-outline);
+    border-radius: 16px;
+    transition: all 0.2s;
+}
+
+.m3-switch-thumb-container {
+    position: absolute;
+    left: 4px;
+    top: 50%;
+    width: 16px;
+    height: 16px;
+    transform: translateY(-50%);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+.m3-switch-thumb {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: var(--sys-color-outline);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s;
+}
+
+/* Checked state */
+.m3-switch input:checked+.m3-switch-track {
+    background-color: var(--sys-color-primary);
+    border-color: var(--sys-color-primary);
+}
+
+.m3-switch input:checked~.m3-switch-thumb-container {
+    transform: translate(20px, -50%);
+    width: 24px;
+    height: 24px;
+}
+
+.m3-switch input:checked~.m3-switch-thumb-container .m3-switch-thumb {
+    background-color: var(--sys-color-on-primary);
+}
+
+/* Hover state */
+.setting-item:hover .m3-switch-thumb {
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
 }
 
 .livechat-settings-close {
