@@ -7,6 +7,37 @@ gsap.registerPlugin(Draggable);
 
 const debug = true;
 
+const themes: Record<string, Record<string, string>> = {
+    default: {
+        '--sys-color-primary': '#1a73e8',
+        '--sys-color-primary-dark': '#1a63d3',
+        '--sys-color-on-primary': '#ffffff',
+        '--sys-color-primary-container': '#d6e2ff',
+        '--sys-color-secondary': '#565f71',
+    },
+    green: {
+        '--sys-color-primary': '#1e8e3e',
+        '--sys-color-primary-dark': '#187332',
+        '--sys-color-on-primary': '#ffffff',
+        '--sys-color-primary-container': '#d2f5d7',
+        '--sys-color-secondary': '#5c635d',
+    },
+    purple: {
+        '--sys-color-primary': '#8e44ad',
+        '--sys-color-primary-dark': '#703388',
+        '--sys-color-on-primary': '#ffffff',
+        '--sys-color-primary-container': '#f1dff8',
+        '--sys-color-secondary': '#655a68',
+    },
+    orange: {
+        '--sys-color-primary': '#d35400',
+        '--sys-color-primary-dark': '#a84300',
+        '--sys-color-on-primary': '#ffffff',
+        '--sys-color-primary-container': '#fbe5d8',
+        '--sys-color-secondary': '#6f5d52',
+    },
+};
+
 // Create floating action button
 export const fab = document.createElement('button');
 fab.className = 'livechat-fab';
@@ -95,26 +126,15 @@ settingsModal.innerHTML = `
                     </div>
                 </div>
             </label>
-            <label class="setting-item">
-                <span>Disable Chat Notifications</span>
-                <div class="m3-switch">
-                    <input type="checkbox" id="disable-notifications" />
-                    <div class="m3-switch-track"></div>
-                    <div class="m3-switch-thumb-container">
-                        <div class="m3-switch-thumb"></div>
-                    </div>
-                </div>
-            </label>
-            <label class="setting-item">
-                <span>Profanity Filter</span>
-                <div class="m3-switch">
-                    <input type="checkbox" id="profanity-filter" />
-                    <div class="m3-switch-track"></div>
-                    <div class="m3-switch-thumb-container">
-                        <div class="m3-switch-thumb"></div>
-                    </div>
-                </div>
-            </label>
+        </div>
+        <div class="theme-selector">
+            <h5>Theme</h5>
+            <div class="theme-options">
+                <div class="theme-option" data-theme="default" style="background-color: #1a73e8;"></div>
+                <div class="theme-option" data-theme="green" style="background-color: #1e8e3e;"></div>
+                <div class="theme-option" data-theme="purple" style="background-color: #8e44ad;"></div>
+                <div class="theme-option" data-theme="orange" style="background-color: #d35400;"></div>
+            </div>
         </div>
         <button class="livechat-settings-close"><i class="material-icons">close</i></button>
     </div>
@@ -130,8 +150,6 @@ export const closeButton = modal.querySelector('.livechat-close') as HTMLButtonE
 const settingsButton = modal.querySelector('.livechat-settings-btn') as HTMLButtonElement;
 const settingsCloseButton = settingsModal.querySelector('.livechat-settings-close') as HTMLButtonElement;
 const enterToSendCheckbox = document.getElementById('enter-to-send') as HTMLInputElement;
-const disableNotificationsCheckbox = document.getElementById('disable-notifications') as HTMLInputElement;
-const profanityFilterCheckbox = document.getElementById('profanity-filter') as HTMLInputElement;
 export const userInfo = document.getElementById('userInfo') as HTMLElement;
 export const chatTabs = document.getElementById('chatTabs') as HTMLElement;
 
@@ -139,8 +157,39 @@ export const chatTabs = document.getElementById('chatTabs') as HTMLElement;
 loadSettings();
 const settings = getSettings();
 enterToSendCheckbox.checked = settings.enterToSend;
-disableNotificationsCheckbox.checked = settings.disableNotifications;
-profanityFilterCheckbox.checked = settings.profanityFilter;
+applyTheme(settings.theme);
+
+// Function to apply a theme
+function applyTheme(themeName: string) {
+    const theme = themes[themeName] || themes.default;
+    for (const [property, value] of Object.entries(theme)) {
+        document.documentElement.style.setProperty(property, value);
+    }
+
+    // Update active theme option
+    const themeOptions = document.querySelectorAll('.theme-option');
+    themeOptions.forEach(option => {
+        option.classList.remove('active');
+        if (option.getAttribute('data-theme') === themeName) {
+            option.classList.add('active');
+        }
+    });
+}
+
+// Theme selection listener
+const themeOptions = document.querySelector('.theme-options');
+if (themeOptions) {
+    themeOptions.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        if (target.classList.contains('theme-option')) {
+            const themeName = target.getAttribute('data-theme');
+            if (themeName) {
+                setSettings({ theme: themeName });
+                applyTheme(themeName);
+            }
+        }
+    });
+}
 
 // Settings modal listeners
 settingsButton.addEventListener('click', () => {
@@ -160,14 +209,6 @@ settingsModal.addEventListener('click', (e) => {
 // Setting change listener
 enterToSendCheckbox.addEventListener('change', (e) => {
     setSettings({ enterToSend: (e.target as HTMLInputElement).checked });
-});
-
-disableNotificationsCheckbox.addEventListener('change', (e) => {
-    setSettings({ disableNotifications: (e.target as HTMLInputElement).checked });
-});
-
-profanityFilterCheckbox.addEventListener('change', (e) => {
-    setSettings({ profanityFilter: (e.target as HTMLInputElement).checked });
 });
 
 

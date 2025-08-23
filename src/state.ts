@@ -47,8 +47,7 @@ export function setCurrentChatRoom(room: string) {
 // --- Settings ---
 let settings = {
     enterToSend: true,
-    disableNotifications: false,
-    profanityFilter: false,
+    theme: 'default',
 };
 
 export const getSettings = () => settings;
