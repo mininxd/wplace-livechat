@@ -84,10 +84,16 @@ settingsModal.style.display = 'none'; // Initially hidden
 settingsModal.innerHTML = `
     <div class="livechat-settings-content">
         <h4>Chat Settings</h4>
-        <div class="setting-item">
-            <label for="enter-to-send">Press Enter to send</label>
-            <input type="checkbox" id="enter-to-send" />
-        </div>
+        <label class="setting-item">
+            <span>Press Enter to send</span>
+            <div class="m3-switch">
+                <input type="checkbox" id="enter-to-send" />
+                <div class="m3-switch-track"></div>
+                <div class="m3-switch-thumb-container">
+                    <div class="m3-switch-thumb"></div>
+                </div>
+            </div>
+        </label>
         <button class="livechat-settings-close"><i class="material-icons">close</i></button>
     </div>
 `;
