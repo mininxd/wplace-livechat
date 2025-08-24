@@ -158,24 +158,20 @@ app.get("/events/:region", (req, res) => {
 
 // POST /send - rate-limited + input validation
 app.post("/send", sendLimiter, async (req, res) => {
-  const { uid, name, region, messages, lat, lot } = req.body;
+  const { uid, name, region, messages } = req.body;
 
   if (
     !uid || typeof uid !== "string" || uid.trim() === "" ||
     !name || typeof name !== "string" || name.trim() === "" ||
     !region || typeof region !== "string" || region.trim() === "" ||
-    !messages || typeof messages !== "string" || messages.trim() === "" ||
-    (lat != null && typeof lat !== 'number') ||
-    (lot != null && typeof lot !== 'number')
+    !messages || typeof messages !== "string" || messages.trim() === ""
   ) {
     return res.status(400).json({ error: "Invalid input" });
   }
 
   try {
     const dataToCreate = { uid, name, region, messages };
-    if (lat != null) dataToCreate.lat = lat;
-    if (lot != null) dataToCreate.lot = lot;
-
+    
     const newMessage = await withRetry(() => prisma.users.create({
       data: dataToCreate,
     }));
