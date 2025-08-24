@@ -14,5 +14,7 @@ model users {
   name      String   @db.VarChar(16)
   region    String   @db.VarChar(32)
   messages  String   @db.VarChar(128)
+  lat       Float?
+  lot       Float?
   createdAt DateTime @default(now())
 }

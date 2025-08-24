@@ -12,6 +12,32 @@ const prisma = new PrismaClient();
 // In-memory store for connected SSE clients, keyed by region
 const clients = new Map();
 
+// Helper function to sleep for a given number of milliseconds
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// A wrapper to retry Prisma queries on connection errors
+async function withRetry(query, maxRetries = 3, delay = 1000) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await query();
+    } catch (err) {
+      // Check if the error is a known "can't connect" error
+      if (err.code === 'P1001') {
+        console.log(`Database connection failed. Retrying in ${delay / 1000}s... (Attempt ${i + 1}/${maxRetries})`);
+        if (i < maxRetries - 1) {
+          await sleep(delay);
+        } else {
+          // If this was the last retry, re-throw the error
+          throw err;
+        }
+      } else {
+        // If it's not a connection error, don't retry, just throw
+        throw err;
+      }
+    }
+  }
+}
+
 app.use(express.json());
 
 // Security middlewares
@@ -59,10 +85,10 @@ app.get("/messages/:region", async (req, res) => {
   const { region } = req.params;
 
   try {
-    const messages = await prisma.users.findMany({
+    const messages = await withRetry(() => prisma.users.findMany({
       where: { region },
       orderBy: { createdAt: "asc" },
-    });
+    }));
     res.json({ data: messages });
   } catch (err) {
     console.error(err);
@@ -75,7 +101,7 @@ app.get("/users/:region", async (req, res) => {
   const { region } = req.params;
 
   try {
-    const users = await prisma.users.findMany({
+    const users = await withRetry(() => prisma.users.findMany({
       where: { region },
       orderBy: { createdAt: "asc" },
       select: {
@@ -84,7 +110,7 @@ app.get("/users/:region", async (req, res) => {
         messages: true,
         createdAt: true,
       },
-    });
+    }));
 
     res.json({ data: users });
   } catch (err) {
@@ -132,21 +158,27 @@ app.get("/events/:region", (req, res) => {
 
 // POST /send - rate-limited + input validation
 app.post("/send", sendLimiter, async (req, res) => {
-  const { uid, name, region, messages } = req.body;
+  const { uid, name, region, messages, lat, lot } = req.body;
 
   if (
     !uid || typeof uid !== "string" || uid.trim() === "" ||
     !name || typeof name !== "string" || name.trim() === "" ||
     !region || typeof region !== "string" || region.trim() === "" ||
-    !messages || typeof messages !== "string" || messages.trim() === ""
+    !messages || typeof messages !== "string" || messages.trim() === "" ||
+    (lat != null && typeof lat !== 'number') ||
+    (lot != null && typeof lot !== 'number')
   ) {
     return res.status(400).json({ error: "Invalid input" });
   }
 
   try {
-    const newMessage = await prisma.users.create({
-      data: { uid, name, region, messages },
-    });
+    const dataToCreate = { uid, name, region, messages };
+    if (lat != null) dataToCreate.lat = lat;
+    if (lot != null) dataToCreate.lot = lot;
+
+    const newMessage = await withRetry(() => prisma.users.create({
+      data: dataToCreate,
+    }));
 
     // Send event to all clients in the region
     if (clients.has(region)) {
