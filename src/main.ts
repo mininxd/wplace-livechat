@@ -11,7 +11,7 @@ import {
     handleFabClick,
     handleTabClick,
     handleSendMessage,
-    stopAutoRefresh,
+    disconnectFromEvents,
     initializeUserData,
     updateUserInfo,
     loadMessages
@@ -30,12 +30,12 @@ fab.addEventListener('click', handleFabClick);
 chatTabs.addEventListener('click', handleTabClick);
 closeButton.addEventListener('click', () => {
     modal.classList.remove('show');
-    stopAutoRefresh();
+    disconnectFromEvents();
 });
 modal.addEventListener('click', (e) => {
     if (e.target === modal) {
         modal.classList.remove('show');
-        stopAutoRefresh();
+        disconnectFromEvents();
     }
 });
 sendButton.addEventListener('click', handleSendMessage);
@@ -48,7 +48,7 @@ chatInput.addEventListener('keydown', (e) => {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && modal.classList.contains('show') && !(e.target as HTMLElement).closest('.livechat-input')) {
         modal.classList.remove('show');
-        stopAutoRefresh();
+        disconnectFromEvents();
     }
 });
 
