@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import rateLimit from "express-rate-limit";
@@ -7,6 +8,35 @@ import helmet from "helmet";
 
 const app = express();
 const prisma = new PrismaClient();
+
+// In-memory store for connected SSE clients, keyed by region
+const clients = new Map();
+
+// Helper function to sleep for a given number of milliseconds
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// A wrapper to retry Prisma queries on connection errors
+async function withRetry(query, maxRetries = 3, delay = 1000) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await query();
+    } catch (err) {
+      // Check if the error is a known "can't connect" error
+      if (err.code === 'P1001') {
+        console.log(`Database connection failed. Retrying in ${delay / 1000}s... (Attempt ${i + 1}/${maxRetries})`);
+        if (i < maxRetries - 1) {
+          await sleep(delay);
+        } else {
+          // If this was the last retry, re-throw the error
+          throw err;
+        }
+      } else {
+        // If it's not a connection error, don't retry, just throw
+        throw err;
+      }
+    }
+  }
+}
 
 app.use(express.json());
 
@@ -50,12 +80,28 @@ app.get("/", async (req, res) => {
   res.json({ status: 200 });
 });
 
+// GET /messages/:region - for fetching initial chat history
+app.get("/messages/:region", async (req, res) => {
+  const { region } = req.params;
+
+  try {
+    const messages = await withRetry(() => prisma.users.findMany({
+      where: { region },
+      orderBy: { createdAt: "asc" },
+    }));
+    res.json({ data: messages });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch messages" });
+  }
+});
+
 // GET /users/:region
 app.get("/users/:region", async (req, res) => {
   const { region } = req.params;
 
   try {
-    const users = await prisma.users.findMany({
+    const users = await withRetry(() => prisma.users.findMany({
       where: { region },
       orderBy: { createdAt: "asc" },
       select: {
@@ -64,7 +110,7 @@ app.get("/users/:region", async (req, res) => {
         messages: true,
         createdAt: true,
       },
-    });
+    }));
 
     res.json({ data: users });
   } catch (err) {
@@ -78,24 +124,70 @@ app.get("/users", (req, res) => {
   res.status(401).json({ error: "unauthorized" });
 });
 
+// SSE endpoint to stream messages
+app.get("/events/:region", (req, res) => {
+  const { region } = req.params;
+
+  // Set headers for SSE
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders();
+
+  // Add client to the map
+  if (!clients.has(region)) {
+    clients.set(region, []);
+  }
+  const regionClients = clients.get(region);
+  regionClients.push(res);
+
+  // Welcome message
+  res.write("data: Connected\n\n");
+
+  // Handle client disconnection
+  req.on("close", () => {
+    const index = regionClients.indexOf(res);
+    if (index !== -1) {
+      regionClients.splice(index, 1);
+    }
+    if (regionClients.length === 0) {
+      clients.delete(region);
+    }
+  });
+});
+
 // POST /send - rate-limited + input validation
 app.post("/send", sendLimiter, async (req, res) => {
-  const { uid, name, region, messages } = req.body;
+  const { uid, name, region, messages, lat, lot } = req.body;
 
   if (
     !uid || typeof uid !== "string" || uid.trim() === "" ||
     !name || typeof name !== "string" || name.trim() === "" ||
     !region || typeof region !== "string" || region.trim() === "" ||
-    !messages || typeof messages !== "string" || messages.trim() === ""
+    !messages || typeof messages !== "string" || messages.trim() === "" ||
+    (lat != null && typeof lat !== 'number') ||
+    (lot != null && typeof lot !== 'number')
   ) {
     return res.status(400).json({ error: "Invalid input" });
   }
 
   try {
-    const data = await prisma.users.create({
-      data: { uid, name, region, messages },
-    });
-    res.json({ status: "success", data });
+    const dataToCreate = { uid, name, region, messages };
+    if (lat != null) dataToCreate.lat = lat;
+    if (lot != null) dataToCreate.lot = lot;
+
+    const newMessage = await withRetry(() => prisma.users.create({
+      data: dataToCreate,
+    }));
+
+    // Send event to all clients in the region
+    if (clients.has(region)) {
+      const regionClients = clients.get(region);
+      const sseMessage = `data: ${JSON.stringify(newMessage)}\n\n`;
+      regionClients.forEach(client => client.write(sseMessage));
+    }
+
+    res.status(201).json({ status: "success", data: newMessage });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to send message" });
