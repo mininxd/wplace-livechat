@@ -1,11 +1,12 @@
 import { getSettings, loadSettings, setSettings, getUserData, getRegionData, getAllianceData, getCurrentChatRoom, setCurrentChatRoom, setUserData, setAllianceData, getPreloadedAllianceMessages, setPreloadedAllianceMessages } from './state';
-import { fetchMessages, sendMessage, fetchAPI } from './api';
+import { fetchMessages, sendMessage, fetchAPI, connectToEvents } from './api';
 import { gsap } from 'gsap';
 import { Draggable } from 'gsap/Draggable';
 
 gsap.registerPlugin(Draggable);
 
 const debug = true;
+let eventSource: EventSource | null = null;
 
 // Create floating action button
 export const fab = document.createElement('button');
@@ -373,20 +374,6 @@ export async function loadMessages() {
                     </div>
                 `;
             }
-        } else {
-            // This is a refresh, only add new messages
-            const lastMessage = messagesContainer.querySelector('.chat-message:last-child') as HTMLElement;
-            const lastTimestamp = lastMessage ? lastMessage.dataset.timestamp : null;
-
-            if (lastTimestamp && response && response.data && response.data.length > 0) {
-                const newMessages = response.data.filter((msg: any) => new Date(msg.createdAt) > new Date(lastTimestamp));
-                if (newMessages.length > 0 && debug) {
-                    console.log(`Found ${newMessages.length} new messages.`);
-                }
-                newMessages.forEach((msg: any) => {
-                    addMessageToChat(msg.name, msg.messages, msg.createdAt, msg.uid === userData.id.toString());
-                });
-            }
         }
 
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -406,6 +393,13 @@ export async function loadMessages() {
             sendButton.disabled = true;
         }
     }
+}
+
+// Helper to sanitize HTML
+function escapeHTML(str: string) {
+    const p = document.createElement('p');
+    p.appendChild(document.createTextNode(str));
+    return p.innerHTML;
 }
 
 // Add message to chat display
@@ -430,7 +424,7 @@ function addMessageToChat(name: string, message: string, timestamp: string, isOw
     messageDiv.innerHTML = `
         <div class="message-author">${isOwn ? `${name} (You)` : name}</div>
         <div class="message-content ${isOwn ? 'own' : ''}">
-            ${message}
+            ${escapeHTML(message)}
             <div class="message-timestamp">${timeString}</div>
         </div>
     `;
@@ -478,8 +472,7 @@ export async function handleSendMessage() {
         chatInput.value = '';
         chatInput.style.height = 'auto';
 
-        // Refresh messages to show the sent message
-        setTimeout(loadMessages, 1000);
+        // The new message will be received via SSE, so no manual refresh is needed.
 
         // Start 3-second cooldown
         let countdown = 3;
@@ -512,28 +505,45 @@ export async function handleSendMessage() {
     }
 }
 
-// Auto-refresh messages every 10 seconds
-let refreshInterval: any;
-
-export function startAutoRefresh() {
-    refreshInterval = setInterval(() => {
-        const userData = getUserData();
-        const regionData = getRegionData();
-        const currentChatRoom = getCurrentChatRoom();
-        if (modal.classList.contains('show') && userData) {
-            if (currentChatRoom === 'region' && !regionData) {
-                // Don't refresh region chat if there's no region data
-                return;
-            }
-            loadMessages();
-        }
-    }, 10000);
+export function disconnectFromEvents() {
+    if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+        if (debug) console.log("SSE connection closed.");
+    }
 }
 
-export function stopAutoRefresh() {
-    if (refreshInterval) {
-        clearInterval(refreshInterval);
-        refreshInterval = null;
+function establishSseConnection() {
+    disconnectFromEvents(); // Ensure any existing connection is closed
+
+    const userData = getUserData();
+    const regionData = getRegionData();
+    const currentChatRoom = getCurrentChatRoom();
+    let chatRoomId: string | null = null;
+
+    if (currentChatRoom === 'region') {
+        if (!regionData) return;
+        chatRoomId = regionData.name;
+    } else if (currentChatRoom === 'alliance') {
+        if (!userData || !userData.allianceId) return;
+        chatRoomId = `alliance_${userData.allianceId}`;
+    }
+
+    if (chatRoomId && userData) {
+        if (debug) console.log(`Establishing SSE connection for ${chatRoomId}`);
+        eventSource = connectToEvents(chatRoomId, (newMessage) => {
+            if (debug) console.log("SSE message received:", newMessage);
+            // Ensure the message is for the currently active chat room
+            const currentRoomId = getCurrentChatRoom() === 'region'
+                ? getRegionData()?.name
+                : `alliance_${getUserData()?.allianceId}`;
+
+            if (newMessage.region === currentRoomId) {
+                addMessageToChat(newMessage.name, newMessage.messages, newMessage.createdAt, newMessage.uid === userData.id.toString());
+            } else {
+                if (debug) console.log("Received message for inactive room:", newMessage.region);
+            }
+        });
     }
 }
 
@@ -554,7 +564,8 @@ export function handleTabClick(e: MouseEvent) {
             }
 
             updateUserInfo();
-            loadMessages();
+            loadMessages(); // Load history for the new room
+            establishSseConnection(); // Establish SSE for the new room
         }
     }
 }
@@ -588,7 +599,7 @@ export async function handleFabClick() {
 
     updateUserInfo();
     await loadMessages();
-    startAutoRefresh();
+    establishSseConnection();
 
     if (userData && getRegionData()) {
         chatInput.focus();

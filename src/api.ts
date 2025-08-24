@@ -23,7 +23,7 @@ export function fetchMessages(region: string) {
     return new Promise<any>((resolve, reject) => {
         GM_xmlhttpRequest({
             method: 'GET',
-            url: `${API_BASE}/users/${region}`,
+            url: `${API_BASE}/messages/${region}`,
             onload: function(response: GM.Response<any>) {
                 try {
                     const data = JSON.parse(response.responseText);
@@ -37,6 +37,28 @@ export function fetchMessages(region: string) {
             }
         });
     });
+}
+
+export function connectToEvents(region: string, onMessage: (data: any) => void): EventSource {
+    const url = `${API_BASE}/events/${region}`;
+    const eventSource = new EventSource(url);
+
+    eventSource.onmessage = function(event) {
+        try {
+            const data = JSON.parse(event.data);
+            onMessage(data);
+        } catch (e) {
+            console.error('Error parsing SSE message:', e);
+        }
+    };
+
+    eventSource.onerror = function(err) {
+        console.error('EventSource failed:', err);
+        // The EventSource will automatically try to reconnect.
+        // You might want to add logic here to handle repeated failures.
+    };
+
+    return eventSource;
 }
 
 export function sendMessage(uid: string, name: string, message: string, region: string) {
