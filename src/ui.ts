@@ -395,6 +395,13 @@ export async function loadMessages() {
     }
 }
 
+// Helper to sanitize HTML
+function escapeHTML(str: string) {
+    const p = document.createElement('p');
+    p.appendChild(document.createTextNode(str));
+    return p.innerHTML;
+}
+
 // Add message to chat display
 function addMessageToChat(name: string, message: string, timestamp: string, isOwn = false) {
     const currentChatRoom = getCurrentChatRoom();
@@ -417,7 +424,7 @@ function addMessageToChat(name: string, message: string, timestamp: string, isOw
     messageDiv.innerHTML = `
         <div class="message-author">${isOwn ? `${name} (You)` : name}</div>
         <div class="message-content ${isOwn ? 'own' : ''}">
-            ${message}
+            ${escapeHTML(message)}
             <div class="message-timestamp">${timeString}</div>
         </div>
     `;
