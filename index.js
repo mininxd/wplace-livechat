@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import rateLimit from "express-rate-limit";
@@ -155,8 +156,7 @@ app.post("/send", sendLimiter, async (req, res) => {
     }
 
     res.status(201).json({ status: "success", data: newMessage });
-  } catch (err)
- {
+  } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to send message" });
   }
