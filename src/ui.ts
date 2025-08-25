@@ -441,18 +441,17 @@ export async function loadMessages() {
             if (debug) console.log(`No messages found for ${chatRoomName}`);
 
             let mainWelcomeText = `Welcome to ${chatRoomName} chat!`;
-            let subText = '';
+            let conversationText = 'Be the first to start the conversation.';
 
             if (currentChatRoom === 'region' && pixelData) {
                 mainWelcomeText = `Welcome to ${chatRoomName} #${pixelData.boardId} chat!`;
                 const roomName = getRoomNameFromRanges(pixelData.xRange, pixelData.yRange);
-                subText = `<div style="font-size: 12px; margin-top: 16px; opacity: 0.8;">${roomName}</div>`;
+                conversationText = `Be the first to start the conversation in <strong>${roomName}</strong>`;
             }
 
             const welcomeMessage = `
                 <div><strong>${mainWelcomeText}</strong></div>
-                <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Be the first to start the conversation.</div>
-                ${subText}
+                <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">${conversationText}</div>
             `;
 
             messagesContainer.innerHTML = `
