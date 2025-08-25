@@ -362,9 +362,8 @@ export async function loadMessages() {
             sendButton.disabled = true;
             return;
         }
-        const regionNameParts = regionData.name.split('_');
-        chatRoomId = `${regionNameParts[0]}_${regionNameParts[1]}`;
-        chatRoomName = regionNameParts[0];
+        chatRoomId = regionData.name;
+        chatRoomName = regionData.name.split('_')[0];
     } else if (currentChatRoom === 'alliance') {
         if (!userData || !userData.allianceId) {
              messagesContainer.innerHTML = `
@@ -515,8 +514,7 @@ export async function handleSendMessage() {
             if (debug) console.error("Cannot send message, no region selected.");
             return;
         }
-        const regionNameParts = regionData.name.split('_');
-        chatRoomId = `${regionNameParts[0]}_${regionNameParts[1]}`;
+        chatRoomId = regionData.name;
     } else if (currentChatRoom === 'alliance') {
         if (!userData.allianceId) {
             if (debug) console.error("Cannot send message, not in an alliance.");
@@ -593,8 +591,7 @@ export function establishSseConnection() {
 
     if (currentChatRoom === 'region') {
         if (!regionData) return;
-        const regionNameParts = regionData.name.split('_');
-        chatRoomId = `${regionNameParts[0]}_${regionNameParts[1]}`;
+        chatRoomId = regionData.name;
     } else if (currentChatRoom === 'alliance') {
         if (!userData || !userData.allianceId) return;
         chatRoomId = `alliance_${userData.allianceId}`;
