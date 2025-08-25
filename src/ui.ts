@@ -239,20 +239,28 @@ export function updateUserInfo() {
             allianceName = `Alliance`; // Fallback while loading
         }
 
-        let chatContextInfo = currentChatRoom === 'region' ? `Region: ${regionName}` : allianceName;
+        let regionInfo = '';
         let areaInfo = '';
-        if (currentChatRoom === 'region' && pixelData) {
-            areaInfo = `<div class="livechat-user-details" id="area-info"><i class="material-icons">my_location</i> Area: ${pixelData.x}:${pixelData.y}</div>`;
-        } else if (currentChatRoom === 'region') {
-            areaInfo = `<div class="livechat-user-details" id="area-info"><i class="material-icons">my_location</i> Area: ...</div>`;
-        }
 
+        if (currentChatRoom === 'region') {
+            if (regionData && pixelData) {
+                regionInfo = `Region: ${regionName} #${userData.id} (${pixelData.boardId})`;
+                areaInfo = `Area: ${pixelData.xRange} | ${pixelData.yRange}`;
+            } else {
+                regionInfo = `Region: ${regionName}`;
+                areaInfo = `Area: ...`;
+            }
+        }
 
         userInfo.innerHTML = `
             <h3><i class="material-icons">person</i> ${userData.name} <span style="font-weight: 300; font-size: 14px;">#${userData.id}</span></h3>
-            <div class="livechat-user-details"><i class="material-icons">place</i> ${chatContextInfo}</div>
-            ${areaInfo}
-            ${currentChatRoom === 'alliance' ? allianceDetails : ''}
+            ${currentChatRoom === 'region' ? `
+                <div class="livechat-user-details"><i class="material-icons">place</i> ${regionInfo}</div>
+                <div class="livechat-user-details"><i class="material-icons">my_location</i> ${areaInfo}</div>
+            ` : `
+                <div class="livechat-user-details"><i class="material-icons">group</i> ${allianceName}</div>
+                ${allianceDetails}
+            `}
             <div class="game-status"><i class="material-icons" style="color: #4CAF50; font-size: 8px;">circle</i> Level ${Math.floor(userData.level)}</div>
         `;
     } else {

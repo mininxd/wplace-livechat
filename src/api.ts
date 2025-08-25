@@ -97,7 +97,7 @@ export function sendMessage(uid: string, name: string, message: string, region: 
 const getRange = (value: number, rangeSize: number) => {
     const start = Math.floor(value / rangeSize) * rangeSize;
     const end = start + rangeSize - 1;
-    return `${start}_${end}`;
+    return `${start}-${end}`;
 };
 
 async function checkForPixelUrl() {
@@ -129,7 +129,7 @@ async function checkForPixelUrl() {
                     const xRange = getRange(parseInt(x), 100);
                     const yRange = getRange(parseInt(y), 100);
                     data.region.name = `${data.region.name}_${boardId}_${xRange}_${yRange}`;
-                    setPixelData({ x, y });
+                    setPixelData({ x, y, boardId, xRange, yRange });
                 }
 
                 setRegionData(data.region);
