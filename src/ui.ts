@@ -276,7 +276,7 @@ export function updateUserInfo() {
                     cooldownText = ` <span style="opacity: 0.7;">(cooldown: ${cooldownRemaining}s)</span><i class="material-icons cooldown-info-icon" id="cooldown-info">info_outline</i>`;
                 }
                 regionInfo = `${regionName} #${pixelData.boardId}${cooldownText}`;
-                areaInfo = `${pixelData.xRange}, ${pixelData.yRange}`;
+                areaInfo = `${pixelData.x}, ${pixelData.y}`;
             } else {
                 regionInfo = `${regionName}`;
                 areaInfo = `...`;
