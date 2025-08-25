@@ -393,24 +393,19 @@ export async function loadMessages() {
         return;
     }
 
-    const isInitialLoad = messagesContainer.querySelector('.chat-message') === null;
-
     try {
-        if (isInitialLoad) {
-            if (debug) console.log(`Initial load of messages for ${chatRoomName}`);
-            messagesContainer.innerHTML = `
-                <div class="loading-indicator">
-                    <div class="m3-progress-bar" style="width: 50%; margin: 0 auto;"></div>
-                    <div style="margin-top: 8px;">Loading messages for ${chatRoomName}...</div>
-                </div>
-            `;
-        }
+        messagesContainer.innerHTML = `
+            <div class="loading-indicator">
+                <div class="m3-progress-bar" style="width: 50%; margin: 0 auto;"></div>
+                <div style="margin-top: 8px;">Loading messages for ${chatRoomName}...</div>
+            </div>
+        `;
 
         let response: any;
         const preloadedMessages = getPreloadedAllianceMessages();
 
         // Use preloaded messages only on the initial load of the alliance chat
-        if (currentChatRoom === 'alliance' && preloadedMessages && isInitialLoad) {
+        if (currentChatRoom === 'alliance' && preloadedMessages) {
             if (debug) console.log("Using preloaded alliance messages.");
             response = preloadedMessages;
             setPreloadedAllianceMessages(null); // Clear after use
@@ -423,31 +418,15 @@ export async function loadMessages() {
             return;
         }
 
-        if (isInitialLoad) {
-            messagesContainer.innerHTML = ''; // Clear loading indicator
-            if (response && response.data && response.data.length > 0) {
-                if (debug) console.log(`Loaded ${response.data.length} messages for ${chatRoomName}`);
-                response.data.forEach((msg: any) => {
-                    addMessageToChat(msg.name, msg.messages, msg.createdAt, msg.uid === userData.id.toString());
-                });
-            } else {
-                if (debug) console.log(`No messages found for ${chatRoomName}`);
-                let welcomeMessage = `
-                    <div><strong>Welcome to ${chatRoomName} chat!</strong></div>
-                    <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Be the first to start the conversation.</div>
-                `;
-
-                if (currentChatRoom === 'region' && pixelData) {
-                    welcomeMessage += `<div style="font-size: 10px; margin-top: 16px; opacity: 0.6;">current region : ${pixelData.boardId} | ${pixelData.x} ${pixelData.y}</div>`;
-                }
-
-                messagesContainer.innerHTML = `
-                    <div class="info-message">
-                        <i class="material-icons">chat</i>
-                        ${welcomeMessage}
-                    </div>
-                `;
-            }
+        messagesContainer.innerHTML = ''; // Clear loading indicator
+        if (response && response.data && response.data.length > 0) {
+            if (debug) console.log(`Loaded ${response.data.length} messages for ${chatRoomName}`);
+            response.data.forEach((msg: any) => {
+                addMessageToChat(msg.name, msg.messages, msg.createdAt, msg.uid === userData.id.toString());
+            });
+        } else {
+            if (debug) console.log(`No messages found for ${chatRoomName}. Displaying empty chat.`);
+            // Container is already empty, so do nothing.
         }
 
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
