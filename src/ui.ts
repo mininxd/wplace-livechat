@@ -276,7 +276,7 @@ export function updateUserInfo() {
                     cooldownText = ` <span style="opacity: 0.7;">(cooldown: ${cooldownRemaining}s)</span><i class="material-icons cooldown-info-icon" id="cooldown-info">info_outline</i>`;
                 }
                 regionInfo = `${regionName} #${pixelData.boardId}${cooldownText}`;
-                areaInfo = `${pixelData.x}, ${pixelData.y}`;
+                areaInfo = `${pixelData.xRange}, ${pixelData.yRange}`;
             } else {
                 regionInfo = `${regionName}`;
                 areaInfo = `...`;
@@ -429,7 +429,10 @@ export async function loadMessages() {
             `;
 
             if (currentChatRoom === 'region' && pixelData) {
-                welcomeMessage += `<div style="font-size: 12px; margin-top: 16px; opacity: 0.8;">current region : ${pixelData.boardId} | ${pixelData.xRange} ${pixelData.yRange}</div>`;
+                welcomeMessage += `
+                    <div style="font-size: 12px; margin-top: 16px; opacity: 0.8;">${chatRoomName} #${pixelData.boardId}</div>
+                    <div style="font-size: 12px; margin-top: 4px; opacity: 0.8;">${pixelData.x}, ${pixelData.y}</div>
+                `;
             }
 
             messagesContainer.innerHTML = `
