@@ -308,7 +308,7 @@ export async function loadMessages() {
             return;
         }
         chatRoomId = regionData.name;
-        chatRoomName = regionData.name;
+        chatRoomName = regionData.name.split('_')[0];
     } else if (currentChatRoom === 'alliance') {
         if (!userData || !userData.allianceId) {
              messagesContainer.innerHTML = `
