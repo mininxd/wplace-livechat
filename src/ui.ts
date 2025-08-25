@@ -283,7 +283,11 @@ export function updateUserInfo() {
             if (pixelData) {
                 const roomName = getRoomNameFromRanges(pixelData.xRange, pixelData.yRange);
                 const rangesText = `(${pixelData.xRange}, ${pixelData.yRange})`;
-                regionDisplay = `<div class="livechat-user-details"><i class="material-icons">place</i> ${roomName} ${rangesText}</div>`;
+                let cooldownText = '';
+                if (cooldownRemaining > 0) {
+                    cooldownText = ` <span style="opacity: 0.7;">(cooldown: ${cooldownRemaining}s)</span><i class="material-icons cooldown-info-icon" id="cooldown-info">info_outline</i>`;
+                }
+                regionDisplay = `<div class="livechat-user-details"><i class="material-icons">place</i> ${roomName} ${rangesText}${cooldownText}</div>`;
             } else {
                 regionDisplay = `<div class="livechat-user-details"><i class="material-icons">place</i> ${regionName}</div>`;
             }
@@ -299,6 +303,21 @@ export function updateUserInfo() {
             ${regionDisplay}
             <div class="game-status"><i class="material-icons" style="color: #4CAF50; font-size: 8px;">circle</i> Level ${Math.floor(userData.level)}</div>
         `;
+
+        if (cooldownRemaining > 0) {
+            const infoIcon = document.getElementById('cooldown-info');
+            if (infoIcon) {
+                infoIcon.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    infoPopup.textContent = `You can change regions again in ${cooldownRemaining} seconds.`;
+                    const rect = infoIcon.getBoundingClientRect();
+                    infoPopup.style.left = `${rect.left + window.scrollX}px`;
+                    infoPopup.style.top = `${rect.bottom + window.scrollY + 5}px`;
+                    infoPopup.classList.add('show');
+                    setTimeout(() => infoPopup.classList.remove('show'), 3000);
+                });
+            }
+        }
     } else {
         userInfo.innerHTML = `
             <h3><i class="material-icons">person</i> Loading...</h3>
