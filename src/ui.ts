@@ -276,7 +276,7 @@ export function updateUserInfo() {
                     cooldownText = ` <span style="opacity: 0.7;">(cooldown: ${cooldownRemaining}s)</span><i class="material-icons cooldown-info-icon" id="cooldown-info">info_outline</i>`;
                 }
                 regionInfo = `${regionName} #${pixelData.boardId}${cooldownText}`;
-                areaInfo = `${pixelData.xRange}, ${pixelData.yRange}`;
+                areaInfo = `${pixelData.x}, ${pixelData.y}`;
             } else {
                 regionInfo = `${regionName}`;
                 areaInfo = `...`;
@@ -423,17 +423,20 @@ export async function loadMessages() {
             });
         } else {
             if (debug) console.log(`No messages found for ${chatRoomName}`);
-            let welcomeMessage = `
-                <div><strong>Welcome to ${chatRoomName} chat!</strong></div>
-                <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Be the first to start the conversation.</div>
-            `;
+
+            let mainWelcomeText = `Welcome to ${chatRoomName} chat!`;
+            let subText = '';
 
             if (currentChatRoom === 'region' && pixelData) {
-                welcomeMessage += `
-                    <div style="font-size: 12px; margin-top: 16px; opacity: 0.8;">${chatRoomName} #${pixelData.boardId}</div>
-                    <div style="font-size: 12px; margin-top: 4px; opacity: 0.8;">${pixelData.x}, ${pixelData.y}</div>
-                `;
+                mainWelcomeText = `Welcome to ${chatRoomName} #${pixelData.boardId} chat!`;
+                subText = `<div style="font-size: 12px; margin-top: 16px; opacity: 0.8;">${pixelData.xRange}, ${pixelData.yRange}</div>`;
             }
+
+            const welcomeMessage = `
+                <div><strong>${mainWelcomeText}</strong></div>
+                <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Be the first to start the conversation.</div>
+                ${subText}
+            `;
 
             messagesContainer.innerHTML = `
                 <div class="info-message">
