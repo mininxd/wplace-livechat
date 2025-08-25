@@ -281,13 +281,20 @@ export function updateUserInfo() {
 
         if (currentChatRoom === 'region') {
             if (pixelData) {
-                const roomName = getRoomNameFromRanges(pixelData.xRange, pixelData.yRange);
-                const rangesText = `(${pixelData.xRange}, ${pixelData.yRange})`;
                 let cooldownText = '';
                 if (cooldownRemaining > 0) {
                     cooldownText = ` <span style="opacity: 0.7;">(cooldown: ${cooldownRemaining}s)</span><i class="material-icons cooldown-info-icon" id="cooldown-info">info_outline</i>`;
                 }
-                regionDisplay = `<div class="livechat-user-details"><i class="material-icons">place</i> ${roomName} ${rangesText}${cooldownText}</div>`;
+                const line1 = `${regionName} #${pixelData.boardId}${cooldownText}`;
+
+                const roomName = getRoomNameFromRanges(pixelData.xRange, pixelData.yRange);
+                const rangesText = `(${pixelData.xRange}, ${pixelData.yRange})`;
+                const line2 = `${roomName} ${rangesText}`;
+
+                regionDisplay = `
+                    <div class="livechat-user-details"><i class="material-icons">place</i> ${line1}</div>
+                    <div class="livechat-user-details"><i class="material-icons">my_location</i> ${line2}</div>
+                `;
             } else {
                 regionDisplay = `<div class="livechat-user-details"><i class="material-icons">place</i> ${regionName}</div>`;
             }
