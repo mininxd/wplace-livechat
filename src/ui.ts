@@ -244,7 +244,7 @@ export function updateUserInfo() {
 
         if (currentChatRoom === 'region') {
             if (regionData && pixelData) {
-                regionInfo = `Region: ${regionName} #${userData.id} (${pixelData.boardId})`;
+                regionInfo = `Region: ${regionName} (${pixelData.boardId})`;
                 areaInfo = `Area: ${pixelData.xRange} | ${pixelData.yRange}`;
             } else {
                 regionInfo = `Region: ${regionName}`;
@@ -532,7 +532,7 @@ export function disconnectFromEvents() {
     }
 }
 
-function establishSseConnection() {
+export function establishSseConnection() {
     disconnectFromEvents(); // Ensure any existing connection is closed
 
     const userData = getUserData();

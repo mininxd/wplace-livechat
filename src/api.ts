@@ -101,12 +101,6 @@ const getRange = (value: number, rangeSize: number) => {
 };
 
 async function checkForPixelUrl() {
-    const regionData = getRegionData();
-    if (regionData) {
-        if (regionDataPoller) clearInterval(regionDataPoller);
-        return;
-    }
-
     const resources = performance.getEntriesByType("resource");
     const pixelResource = resources.reverse().find(r => r.name.includes("https://backend.wplace.live/s0/pixel/"));
 
@@ -125,19 +119,20 @@ async function checkForPixelUrl() {
                 const x = url.searchParams.get('x');
                 const y = url.searchParams.get('y');
 
+                const currentRegion = getRegionData();
                 if (x && y && boardId) {
                     const xRange = getRange(parseInt(x), 100);
                     const yRange = getRange(parseInt(y), 100);
-                    data.region.name = `${data.region.name}_${boardId}_${xRange}_${yRange}`;
-                    setPixelData({ x, y, boardId, xRange, yRange });
+                    const newRegionName = `${data.region.name}_${boardId}_${xRange}_${yRange}`;
+
+                    if (!currentRegion || currentRegion.name !== newRegionName) {
+                        data.region.name = newRegionName;
+                        setPixelData({ x, y, boardId, xRange, yRange });
+                        setRegionData(data.region);
+                        if (debug) console.log("New region data set:", getRegionData());
+                        document.dispatchEvent(new CustomEvent('regionDataFound'));
+                    }
                 }
-
-                setRegionData(data.region);
-                if (debug) console.log("Region data fetched successfully:", getRegionData());
-                if (regionDataPoller) clearInterval(regionDataPoller);
-
-                // Dispatch a custom event to notify the rest of the script
-                document.dispatchEvent(new CustomEvent('regionDataFound'));
             }
         } catch (error) {
             if (debug) console.error("Error fetching region data from performance entry:", error);

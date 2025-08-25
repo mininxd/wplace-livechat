@@ -14,7 +14,8 @@ import {
     disconnectFromEvents,
     initializeUserData,
     updateUserInfo,
-    loadMessages
+    loadMessages,
+    establishSseConnection
 } from './ui'
 
 /// <reference types="@types/greasemonkey" />
@@ -23,6 +24,7 @@ document.addEventListener('regionDataFound', () => {
     if (modal.classList.contains('show')) {
         updateUserInfo();
         loadMessages();
+        establishSseConnection();
     }
 });
 
