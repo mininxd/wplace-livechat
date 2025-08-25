@@ -425,8 +425,22 @@ export async function loadMessages() {
                 addMessageToChat(msg.name, msg.messages, msg.createdAt, msg.uid === userData.id.toString());
             });
         } else {
-            if (debug) console.log(`No messages found for ${chatRoomName}. Displaying empty chat.`);
-            // Container is already empty, so do nothing.
+            if (debug) console.log(`No messages found for ${chatRoomName}`);
+            let welcomeMessage = `
+                <div><strong>Welcome to ${chatRoomName} chat!</strong></div>
+                <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Be the first to start the conversation.</div>
+            `;
+
+            if (currentChatRoom === 'region' && pixelData) {
+                welcomeMessage += `<div style="font-size: 10px; margin-top: 16px; opacity: 0.6;">current region : ${pixelData.boardId} | ${pixelData.x} ${pixelData.y}</div>`;
+            }
+
+            messagesContainer.innerHTML = `
+                <div class="info-message">
+                    <i class="material-icons">chat</i>
+                    ${welcomeMessage}
+                </div>
+            `;
         }
 
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
