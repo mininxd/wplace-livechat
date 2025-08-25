@@ -429,7 +429,7 @@ export async function loadMessages() {
             `;
 
             if (currentChatRoom === 'region' && pixelData) {
-                welcomeMessage += `<div style="font-size: 10px; margin-top: 16px; opacity: 0.6;">current region : ${pixelData.boardId} | ${pixelData.x} ${pixelData.y}</div>`;
+                welcomeMessage += `<div style="font-size: 12px; margin-top: 16px; opacity: 0.8;">current region : ${pixelData.boardId} | ${pixelData.xRange} ${pixelData.yRange}</div>`;
             }
 
             messagesContainer.innerHTML = `
