@@ -6,6 +6,8 @@ const API_BASE = 'https://wplace-live-chat-server.vercel.app';
 const debug = false;
 let regionDataPoller: any = null;
 let lastCheckedUrl = '';
+let lastRegionChangeTimestamp = 0;
+const REGION_CHANGE_COOLDOWN = 5000; // 5 seconds
 
 export const fetchAPI = async (url: string, options = {}) => {
     try {
@@ -106,6 +108,14 @@ async function checkForPixelUrl() {
 
     if (pixelResource && pixelResource.name !== lastCheckedUrl) {
         lastCheckedUrl = pixelResource.name;
+
+        const now = Date.now();
+        if (now - lastRegionChangeTimestamp < REGION_CHANGE_COOLDOWN) {
+            const remaining = Math.ceil((REGION_CHANGE_COOLDOWN - (now - lastRegionChangeTimestamp)) / 1000);
+            document.dispatchEvent(new CustomEvent('regionChangeCooldown', { detail: { remaining } }));
+            return;
+        }
+
         const url = new URL(lastCheckedUrl);
         const baseUrl = `${url.protocol}//${url.host}${url.pathname}`;
         if (debug) console.log("Found pixel URL in performance entries:", baseUrl);
@@ -126,6 +136,7 @@ async function checkForPixelUrl() {
                     const newRegionName = `${data.region.name}_${boardId}_${xRange}_${yRange}`;
 
                     if (!currentRegion || currentRegion.name !== newRegionName) {
+                        lastRegionChangeTimestamp = Date.now();
                         data.region.name = newRegionName;
                         setPixelData({ x, y, boardId, xRange, yRange });
                         setRegionData(data.region);

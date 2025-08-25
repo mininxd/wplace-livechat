@@ -244,10 +244,10 @@ export function updateUserInfo() {
 
         if (currentChatRoom === 'region') {
             if (regionData && pixelData) {
-                regionInfo = `Region: ${regionName} (${pixelData.boardId})`;
+                regionInfo = `${regionName} #${pixelData.boardId}`;
                 areaInfo = `Area: ${pixelData.xRange} | ${pixelData.yRange}`;
             } else {
-                regionInfo = `Region: ${regionName}`;
+                regionInfo = `${regionName}`;
                 areaInfo = `Area: ...`;
             }
         }
@@ -449,6 +449,10 @@ function addMessageToChat(name: string, message: string, timestamp: string, isOw
     `;
     messagesContainer.appendChild(messageDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+export function showSystemMessage(message: string) {
+    addMessageToChat('System', message, new Date().toISOString(), false);
 }
 
 // Send message function

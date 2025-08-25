@@ -15,7 +15,8 @@ import {
     initializeUserData,
     updateUserInfo,
     loadMessages,
-    establishSseConnection
+    establishSseConnection,
+    showSystemMessage
 } from './ui'
 
 /// <reference types="@types/greasemonkey" />
@@ -25,6 +26,12 @@ document.addEventListener('regionDataFound', () => {
         updateUserInfo();
         loadMessages();
         establishSseConnection();
+    }
+});
+
+document.addEventListener('regionChangeCooldown', (e: any) => {
+    if (modal.classList.contains('show')) {
+        showSystemMessage(`You can change regions again in ${e.detail.remaining} seconds.`);
     }
 });
 
