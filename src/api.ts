@@ -1,6 +1,6 @@
 /// <reference types="@types/greasemonkey" />
 
-import { getRegionData, setRegionData } from './state';
+import { getRegionData, setRegionData, setPixelData } from './state';
 
 const API_BASE = 'https://wplace-live-chat-server.vercel.app';
 const debug = false;
@@ -94,6 +94,12 @@ export function sendMessage(uid: string, name: string, message: string, region: 
     });
 }
 
+const getRange = (value: number, rangeSize: number) => {
+    const start = Math.floor(value / rangeSize) * rangeSize;
+    const end = start + rangeSize - 1;
+    return `${start}_${end}`;
+};
+
 async function checkForPixelUrl() {
     const regionData = getRegionData();
     if (regionData) {
@@ -106,12 +112,23 @@ async function checkForPixelUrl() {
 
     if (pixelResource && pixelResource.name !== lastCheckedUrl) {
         lastCheckedUrl = pixelResource.name;
-        const url = lastCheckedUrl.split('?')[0];
-        if (debug) console.log("Found pixel URL in performance entries:", url);
+        const url = new URL(lastCheckedUrl);
+        const baseUrl = `${url.protocol}//${url.host}${url.pathname}`;
+        if (debug) console.log("Found pixel URL in performance entries:", baseUrl);
 
         try {
-            const data = await fetchAPI(url);
+            const data = await fetchAPI(baseUrl);
             if (data && data.region && data.region.name) {
+                const x = url.searchParams.get('x');
+                const y = url.searchParams.get('y');
+
+                if (x && y) {
+                    const xRange = getRange(parseInt(x), 250);
+                    const yRange = getRange(parseInt(y), 250);
+                    data.region.name = `${data.region.name}_${xRange}_${yRange}`;
+                    setPixelData({ x, y });
+                }
+
                 setRegionData(data.region);
                 if (debug) console.log("Region data fetched successfully:", getRegionData());
                 if (regionDataPoller) clearInterval(regionDataPoller);

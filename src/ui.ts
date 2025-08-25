@@ -1,4 +1,4 @@
-import { getSettings, loadSettings, setSettings, getUserData, getRegionData, getAllianceData, getCurrentChatRoom, setCurrentChatRoom, setUserData, setAllianceData, getPreloadedAllianceMessages, setPreloadedAllianceMessages } from './state';
+import { getSettings, loadSettings, setSettings, getUserData, getRegionData, getAllianceData, getCurrentChatRoom, setCurrentChatRoom, setUserData, setAllianceData, getPreloadedAllianceMessages, setPreloadedAllianceMessages, getPixelData } from './state';
 import { fetchMessages, sendMessage, fetchAPI, connectToEvents } from './api';
 import { gsap } from 'gsap';
 import { Draggable } from 'gsap/Draggable';
@@ -41,6 +41,7 @@ modal.innerHTML = `
                     <h3><i class="material-icons">person</i> Loading...</h3>
                     <div class="livechat-user-details"><i class="material-icons">tag</i> ID: ...</div>
                     <div class="livechat-user-details"><i class="material-icons">place</i> Region: ...</div>
+                    <div class="livechat-user-details" id="area-info"><i class="material-icons">my_location</i> Area: ...</div>
                     <div class="game-status"><i class="material-icons" style="color: #4CAF50; font-size: 8px;">circle</i> Online</div>
                 </div>
                     <div class="livechat-header-actions">
@@ -212,10 +213,11 @@ export function updateUserInfo() {
     const userData = getUserData();
     const regionData = getRegionData();
     const allianceData = getAllianceData();
+    const pixelData = getPixelData();
     const currentChatRoom = getCurrentChatRoom();
 
     if (userData) {
-        let regionName = regionData ? regionData.name : "No region";
+        let regionName = regionData ? regionData.name.split('_')[0] : "No region";
         let allianceName = '';
         let allianceDetails = '';
 
@@ -238,10 +240,18 @@ export function updateUserInfo() {
         }
 
         let chatContextInfo = currentChatRoom === 'region' ? `Region: ${regionName}` : allianceName;
+        let areaInfo = '';
+        if (currentChatRoom === 'region' && pixelData) {
+            areaInfo = `<div class="livechat-user-details" id="area-info"><i class="material-icons">my_location</i> Area: ${pixelData.x}:${pixelData.y}</div>`;
+        } else if (currentChatRoom === 'region') {
+            areaInfo = `<div class="livechat-user-details" id="area-info"><i class="material-icons">my_location</i> Area: ...</div>`;
+        }
+
 
         userInfo.innerHTML = `
             <h3><i class="material-icons">person</i> ${userData.name} <span style="font-weight: 300; font-size: 14px;">#${userData.id}</span></h3>
             <div class="livechat-user-details"><i class="material-icons">place</i> ${chatContextInfo}</div>
+            ${areaInfo}
             ${currentChatRoom === 'alliance' ? allianceDetails : ''}
             <div class="game-status"><i class="material-icons" style="color: #4CAF50; font-size: 8px;">circle</i> Level ${Math.floor(userData.level)}</div>
         `;
@@ -249,6 +259,7 @@ export function updateUserInfo() {
         userInfo.innerHTML = `
             <h3><i class="material-icons">person</i> Loading...</h3>
             <div class="livechat-user-details"><i class="material-icons">place</i> Region: ...</div>
+            <div class="livechat-user-details" id="area-info"><i class="material-icons">my_location</i> Area: ...</div>
             <div class="game-status"><i class="material-icons" style="color: #FF9800; font-size: 8px;">circle</i> Loading</div>
         `;
     }
