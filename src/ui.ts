@@ -429,7 +429,20 @@ export async function loadMessages() {
 
             if (currentChatRoom === 'region' && pixelData) {
                 mainWelcomeText = `Welcome to ${chatRoomName} #${pixelData.boardId} chat!`;
-                subText = `<div style="font-size: 12px; margin-top: 16px; opacity: 0.8;">${pixelData.xRange}, ${pixelData.yRange}</div>`;
+
+                let roomName = '';
+                if (pixelData.xRange === '0-499' && pixelData.yRange === '0-499') {
+                    roomName = 'Room 1';
+                } else if (pixelData.xRange === '500-999' && pixelData.yRange === '0-499') {
+                    roomName = 'Room 2';
+                } else if (pixelData.xRange === '0-499' && pixelData.yRange === '500-999') {
+                    roomName = 'Room 3';
+                } else if (pixelData.xRange === '500-999' && pixelData.yRange === '500-999') {
+                    roomName = 'Room 4';
+                } else {
+                    roomName = `${pixelData.xRange}, ${pixelData.yRange}`;
+                }
+                subText = `<div style="font-size: 12px; margin-top: 16px; opacity: 0.8;">${roomName}</div>`;
             }
 
             const welcomeMessage = `
