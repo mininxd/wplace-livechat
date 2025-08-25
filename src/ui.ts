@@ -295,6 +295,7 @@ export function updateUserInfo() {
 export async function loadMessages() {
     const userData = getUserData();
     const regionData = getRegionData();
+    const pixelData = getPixelData();
     const currentChatRoom = getCurrentChatRoom();
     const initialChatRoom = currentChatRoom;
     let chatRoomId: string | null = null;
@@ -385,11 +386,19 @@ export async function loadMessages() {
                 });
             } else {
                 if (debug) console.log(`No messages found for ${chatRoomName}`);
+                let welcomeMessage = '';
+                if (currentChatRoom === 'region' && pixelData) {
+                    welcomeMessage = `<div><strong>current region : ${pixelData.boardId} | ${pixelData.x} ${pixelData.y}</strong></div>`;
+                } else {
+                    welcomeMessage = `
+                        <div><strong>Welcome to ${chatRoomName} chat!</strong></div>
+                        <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Be the first to start the conversation.</div>
+                    `;
+                }
                 messagesContainer.innerHTML = `
                     <div class="info-message">
                         <i class="material-icons">chat</i>
-                        <div><strong>Welcome to ${chatRoomName} chat!</strong></div>
-                        <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Be the first to start the conversation.</div>
+                        ${welcomeMessage}
                     </div>
                 `;
             }
