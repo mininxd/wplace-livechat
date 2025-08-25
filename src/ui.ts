@@ -5,6 +5,14 @@ import { Draggable } from 'gsap/Draggable';
 
 gsap.registerPlugin(Draggable);
 
+function getRoomNameFromRanges(xRange: string, yRange: string): string {
+    if (xRange === '0-499' && yRange === '0-499') return 'Room 1';
+    if (xRange === '500-999' && yRange === '0-499') return 'Room 2';
+    if (xRange === '0-499' && yRange === '500-999') return 'Room 3';
+    if (xRange === '500-999' && yRange === '500-999') return 'Room 4';
+    return `${xRange}, ${yRange}`; // Fallback
+}
+
 const debug = true;
 let eventSource: EventSource | null = null;
 let cooldownInterval: any = null;
@@ -269,46 +277,28 @@ export function updateUserInfo() {
         let regionInfo = '';
         let areaInfo = '';
 
+        let regionDisplay = '';
+
         if (currentChatRoom === 'region') {
-            if (regionData && pixelData) {
-                let cooldownText = '';
-                if (cooldownRemaining > 0) {
-                    cooldownText = ` <span style="opacity: 0.7;">(cooldown: ${cooldownRemaining}s)</span><i class="material-icons cooldown-info-icon" id="cooldown-info">info_outline</i>`;
-                }
-                regionInfo = `${regionName} #${pixelData.boardId}${cooldownText}`;
-                areaInfo = `${pixelData.xRange}, ${pixelData.yRange}`;
+            if (pixelData) {
+                const roomName = getRoomNameFromRanges(pixelData.xRange, pixelData.yRange);
+                const rangesText = `(${pixelData.xRange}, ${pixelData.yRange})`;
+                regionDisplay = `<div class="livechat-user-details"><i class="material-icons">place</i> ${roomName} ${rangesText}</div>`;
             } else {
-                regionInfo = `${regionName}`;
-                areaInfo = `...`;
+                regionDisplay = `<div class="livechat-user-details"><i class="material-icons">place</i> ${regionName}</div>`;
             }
+        } else {
+            regionDisplay = `
+                <div class="livechat-user-details"><i class="material-icons">group</i> ${allianceName}</div>
+                ${allianceDetails}
+            `;
         }
 
         userInfo.innerHTML = `
             <h3><i class="material-icons">person</i> ${userData.name} <span style="font-weight: 300; font-size: 14px;">#${userData.id}</span></h3>
-            ${currentChatRoom === 'region' ? `
-                <div class="livechat-user-details"><i class="material-icons">place</i> ${regionInfo}</div>
-                <div class="livechat-user-details"><i class="material-icons">my_location</i> ${areaInfo}</div>
-            ` : `
-                <div class="livechat-user-details"><i class="material-icons">group</i> ${allianceName}</div>
-                ${allianceDetails}
-            `}
+            ${regionDisplay}
             <div class="game-status"><i class="material-icons" style="color: #4CAF50; font-size: 8px;">circle</i> Level ${Math.floor(userData.level)}</div>
         `;
-
-        if (cooldownRemaining > 0) {
-            const infoIcon = document.getElementById('cooldown-info');
-            if (infoIcon) {
-                infoIcon.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    infoPopup.textContent = `You can change regions again in ${cooldownRemaining} seconds.`;
-                    const rect = infoIcon.getBoundingClientRect();
-                    infoPopup.style.left = `${rect.left + window.scrollX}px`;
-                    infoPopup.style.top = `${rect.bottom + window.scrollY + 5}px`;
-                    infoPopup.classList.add('show');
-                    setTimeout(() => infoPopup.classList.remove('show'), 3000);
-                });
-            }
-        }
     } else {
         userInfo.innerHTML = `
             <h3><i class="material-icons">person</i> Loading...</h3>
@@ -429,19 +419,7 @@ export async function loadMessages() {
 
             if (currentChatRoom === 'region' && pixelData) {
                 mainWelcomeText = `Welcome to ${chatRoomName} #${pixelData.boardId} chat!`;
-
-                let roomName = '';
-                if (pixelData.xRange === '0-499' && pixelData.yRange === '0-499') {
-                    roomName = 'Room 1';
-                } else if (pixelData.xRange === '500-999' && pixelData.yRange === '0-499') {
-                    roomName = 'Room 2';
-                } else if (pixelData.xRange === '0-499' && pixelData.yRange === '500-999') {
-                    roomName = 'Room 3';
-                } else if (pixelData.xRange === '500-999' && pixelData.yRange === '500-999') {
-                    roomName = 'Room 4';
-                } else {
-                    roomName = `${pixelData.xRange}, ${pixelData.yRange}`;
-                }
+                const roomName = getRoomNameFromRanges(pixelData.xRange, pixelData.yRange);
                 subText = `<div style="font-size: 12px; margin-top: 16px; opacity: 0.8;">${roomName}</div>`;
             }
 
