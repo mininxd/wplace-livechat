@@ -119,13 +119,16 @@ async function checkForPixelUrl() {
         try {
             const data = await fetchAPI(baseUrl);
             if (data && data.region && data.region.name) {
+                const pathParts = url.pathname.split('/');
+                const boardId = pathParts[pathParts.length - 1];
+
                 const x = url.searchParams.get('x');
                 const y = url.searchParams.get('y');
 
-                if (x && y) {
-                    const xRange = getRange(parseInt(x), 250);
-                    const yRange = getRange(parseInt(y), 250);
-                    data.region.name = `${data.region.name}_${xRange}_${yRange}`;
+                if (x && y && boardId) {
+                    const xRange = getRange(parseInt(x), 100);
+                    const yRange = getRange(parseInt(y), 100);
+                    data.region.name = `${data.region.name}_${boardId}_${xRange}_${yRange}`;
                     setPixelData({ x, y });
                 }
 
