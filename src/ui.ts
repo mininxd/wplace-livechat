@@ -1,12 +1,41 @@
-import { getSettings, loadSettings, setSettings, getUserData, getRegionData, getAllianceData, getCurrentChatRoom, setCurrentChatRoom, setUserData, setAllianceData, getPreloadedAllianceMessages, setPreloadedAllianceMessages } from './state';
+import { getSettings, loadSettings, setSettings, getUserData, getRegionData, getAllianceData, getCurrentChatRoom, setCurrentChatRoom, setUserData, setAllianceData, getPreloadedAllianceMessages, setPreloadedAllianceMessages, getPixelData, getDisplayedChatRoomId, setDisplayedChatRoomId } from './state';
 import { fetchMessages, sendMessage, fetchAPI, connectToEvents } from './api';
 import { gsap } from 'gsap';
 import { Draggable } from 'gsap/Draggable';
 
 gsap.registerPlugin(Draggable);
 
+function getRoomNameFromRanges(xRange: string, yRange: string): string {
+    if (xRange === '0-499' && yRange === '0-499') return 'Room 1';
+    if (xRange === '500-999' && yRange === '0-499') return 'Room 2';
+    if (xRange === '0-499' && yRange === '500-999') return 'Room 3';
+    if (xRange === '500-999' && yRange === '500-999') return 'Room 4';
+    return `${xRange}, ${yRange}`; // Fallback
+}
+
 const debug = true;
 let eventSource: EventSource | null = null;
+let cooldownInterval: any = null;
+let cooldownRemaining = 0;
+
+export function startCooldownDisplay(duration: number) {
+    if (cooldownInterval) clearInterval(cooldownInterval);
+
+    cooldownRemaining = duration;
+    updateUserInfo(); // Initial display
+
+    cooldownInterval = setInterval(() => {
+        cooldownRemaining--;
+        if (cooldownRemaining > 0) {
+            updateUserInfo();
+        } else {
+            clearInterval(cooldownInterval);
+            cooldownInterval = null;
+            cooldownRemaining = 0;
+            updateUserInfo(); // Final update to remove the cooldown display
+        }
+    }, 1000);
+}
 
 // Create floating action button
 export const fab = document.createElement('button');
@@ -41,6 +70,7 @@ modal.innerHTML = `
                     <h3><i class="material-icons">person</i> Loading...</h3>
                     <div class="livechat-user-details"><i class="material-icons">tag</i> ID: ...</div>
                     <div class="livechat-user-details"><i class="material-icons">place</i> Region: ...</div>
+                    <div class="livechat-user-details" id="area-info"><i class="material-icons">my_location</i> Area: ...</div>
                     <div class="game-status"><i class="material-icons" style="color: #4CAF50; font-size: 8px;">circle</i> Online</div>
                 </div>
                     <div class="livechat-header-actions">
@@ -99,6 +129,12 @@ settingsModal.innerHTML = `
     </div>
 `;
 document.body.appendChild(settingsModal);
+
+// Create info popup
+export const infoPopup = document.createElement('div');
+infoPopup.className = 'livechat-info-popup';
+document.body.appendChild(infoPopup);
+
 
 // Get elements
 export const regionMessages = document.getElementById('region-messages') as HTMLElement;
@@ -212,10 +248,11 @@ export function updateUserInfo() {
     const userData = getUserData();
     const regionData = getRegionData();
     const allianceData = getAllianceData();
+    const pixelData = getPixelData();
     const currentChatRoom = getCurrentChatRoom();
 
     if (userData) {
-        let regionName = regionData ? regionData.name : "No region";
+        let regionName = regionData ? regionData.name.split('_')[0] : "No region";
         let allianceName = '';
         let allianceDetails = '';
 
@@ -237,18 +274,62 @@ export function updateUserInfo() {
             allianceName = `Alliance`; // Fallback while loading
         }
 
-        let chatContextInfo = currentChatRoom === 'region' ? `Region: ${regionName}` : allianceName;
+        let regionInfo = '';
+        let areaInfo = '';
+
+        let regionDisplay = '';
+
+        if (currentChatRoom === 'region') {
+            if (pixelData) {
+                let cooldownText = '';
+                if (cooldownRemaining > 0) {
+                    cooldownText = ` <span style="opacity: 0.7;">(cooldown: ${cooldownRemaining}s)</span><i class="material-icons cooldown-info-icon" id="cooldown-info">info_outline</i>`;
+                }
+                const line1 = `${regionName} #${pixelData.boardId}${cooldownText}`;
+
+                const roomName = getRoomNameFromRanges(pixelData.xRange, pixelData.yRange);
+                const rangesText = `(${pixelData.xRange}, ${pixelData.yRange})`;
+                const line2 = `${roomName} ${rangesText}`;
+
+                regionDisplay = `
+                    <div class="livechat-user-details"><i class="material-icons">place</i> ${line1}</div>
+                    <div class="livechat-user-details"><i class="material-icons">my_location</i> ${line2}</div>
+                `;
+            } else {
+                regionDisplay = `<div class="livechat-user-details"><i class="material-icons">place</i> ${regionName}</div>`;
+            }
+        } else {
+            regionDisplay = `
+                <div class="livechat-user-details"><i class="material-icons">group</i> ${allianceName}</div>
+                ${allianceDetails}
+            `;
+        }
 
         userInfo.innerHTML = `
             <h3><i class="material-icons">person</i> ${userData.name} <span style="font-weight: 300; font-size: 14px;">#${userData.id}</span></h3>
-            <div class="livechat-user-details"><i class="material-icons">place</i> ${chatContextInfo}</div>
-            ${currentChatRoom === 'alliance' ? allianceDetails : ''}
+            ${regionDisplay}
             <div class="game-status"><i class="material-icons" style="color: #4CAF50; font-size: 8px;">circle</i> Level ${Math.floor(userData.level)}</div>
         `;
+
+        if (cooldownRemaining > 0) {
+            const infoIcon = document.getElementById('cooldown-info');
+            if (infoIcon) {
+                infoIcon.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    infoPopup.textContent = `You can change regions again in ${cooldownRemaining} seconds.`;
+                    const rect = infoIcon.getBoundingClientRect();
+                    infoPopup.style.left = `${rect.left + window.scrollX}px`;
+                    infoPopup.style.top = `${rect.bottom + window.scrollY + 5}px`;
+                    infoPopup.classList.add('show');
+                    setTimeout(() => infoPopup.classList.remove('show'), 3000);
+                });
+            }
+        }
     } else {
         userInfo.innerHTML = `
             <h3><i class="material-icons">person</i> Loading...</h3>
             <div class="livechat-user-details"><i class="material-icons">place</i> Region: ...</div>
+            <div class="livechat-user-details" id="area-info"><i class="material-icons">my_location</i> Area: ...</div>
             <div class="game-status"><i class="material-icons" style="color: #FF9800; font-size: 8px;">circle</i> Loading</div>
         `;
     }
@@ -276,6 +357,7 @@ export function updateUserInfo() {
 export async function loadMessages() {
     const userData = getUserData();
     const regionData = getRegionData();
+    const pixelData = getPixelData();
     const currentChatRoom = getCurrentChatRoom();
     const initialChatRoom = currentChatRoom;
     let chatRoomId: string | null = null;
@@ -297,7 +379,7 @@ export async function loadMessages() {
             return;
         }
         chatRoomId = regionData.name;
-        chatRoomName = regionData.name;
+        chatRoomName = regionData.name.split('_')[0];
     } else if (currentChatRoom === 'alliance') {
         if (!userData || !userData.allianceId) {
              messagesContainer.innerHTML = `
@@ -327,71 +409,75 @@ export async function loadMessages() {
         return;
     }
 
-    const isInitialLoad = messagesContainer.querySelector('.chat-message') === null;
+    if (chatRoomId === getDisplayedChatRoomId()) {
+        if (debug) console.log(`Messages for room ${chatRoomId} are already displayed. Skipping fetch.`);
+        return;
+    }
 
     try {
-        if (isInitialLoad) {
-            if (debug) console.log(`Initial load of messages for ${chatRoomName}`);
-            messagesContainer.innerHTML = `
-                <div class="loading-indicator">
-                    <div class="m3-progress-bar" style="width: 50%; margin: 0 auto;"></div>
-                    <div style="margin-top: 8px;">Loading messages for ${chatRoomName}...</div>
-                </div>
-            `;
-        }
-
         let response: any;
         const preloadedMessages = getPreloadedAllianceMessages();
 
-        // Use preloaded messages only on the initial load of the alliance chat
-        if (currentChatRoom === 'alliance' && preloadedMessages && isInitialLoad) {
+        if (currentChatRoom === 'alliance' && preloadedMessages) {
             if (debug) console.log("Using preloaded alliance messages.");
             response = preloadedMessages;
-            setPreloadedAllianceMessages(null); // Clear after use
+            setPreloadedAllianceMessages(null);
         } else {
             response = await fetchMessages(chatRoomId as string);
         }
 
         if (getCurrentChatRoom() !== initialChatRoom) {
-            if (debug) console.log(`Room changed from ${initialChatRoom} to ${getCurrentChatRoom()}. Aborting message load.`);
+            if (debug) console.log(`Room changed from ${initialChatRoom} to ${getCurrentChatRoom()}. Aborting message render.`);
             return;
         }
 
-        if (isInitialLoad) {
-            messagesContainer.innerHTML = ''; // Clear loading indicator
-            if (response && response.data && response.data.length > 0) {
-                if (debug) console.log(`Loaded ${response.data.length} messages for ${chatRoomName}`);
-                response.data.forEach((msg: any) => {
-                    addMessageToChat(msg.name, msg.messages, msg.createdAt, msg.uid === userData.id.toString());
-                });
-            } else {
-                if (debug) console.log(`No messages found for ${chatRoomName}`);
-                messagesContainer.innerHTML = `
-                    <div class="info-message">
-                        <i class="material-icons">chat</i>
-                        <div><strong>Welcome to ${chatRoomName} chat!</strong></div>
-                        <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Be the first to start the conversation.</div>
-                    </div>
-                `;
+        messagesContainer.innerHTML = '';
+        if (response && response.data && response.data.length > 0) {
+            if (debug) console.log(`Loaded ${response.data.length} messages for ${chatRoomName}`);
+            response.data.forEach((msg: any) => {
+                addMessageToChat(msg.name, msg.messages, msg.createdAt, msg.uid === userData.id.toString());
+            });
+        } else {
+            if (debug) console.log(`No messages found for ${chatRoomName}`);
+
+            let mainWelcomeText = `Welcome to ${chatRoomName} chat!`;
+            let conversationText = 'Be the first to start the conversation.';
+
+            if (currentChatRoom === 'region' && pixelData) {
+                mainWelcomeText = `Welcome to ${chatRoomName} #${pixelData.boardId} chat!`;
+                const roomName = getRoomNameFromRanges(pixelData.xRange, pixelData.yRange);
+                conversationText = `Be the first to start the conversation in <strong>${roomName}</strong>`;
             }
+
+            const welcomeMessage = `
+                <div><strong>${mainWelcomeText}</strong></div>
+                <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">${conversationText}</div>
+            `;
+
+            messagesContainer.innerHTML = `
+                <div class="info-message">
+                    <i class="material-icons">chat</i>
+                    ${welcomeMessage}
+                </div>
+            `;
         }
 
+        setDisplayedChatRoomId(chatRoomId);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
         chatInput.disabled = false;
         sendButton.disabled = false;
     } catch (error) {
         if (debug) console.error('Error loading messages:', error);
-        if (isInitialLoad) {
-            messagesContainer.innerHTML = `
-                <div class="info-message">
-                    <i class="material-icons">warning</i>
-                    <div><strong>Failed to load messages</strong></div>
-                    <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Please check your connection and try again.</div>
-                </div>
-            `;
-            chatInput.disabled = true;
-            sendButton.disabled = true;
-        }
+        setDisplayedChatRoomId(null); // Clear displayed room on error
+        messagesContainer.innerHTML = `
+            <div class="info-message">
+                <i class="material-icons">warning</i>
+                <div><strong>Failed to load messages</strong></div>
+                <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Please check your connection and try again.</div>
+            </div>
+        `;
+        chatInput.disabled = true;
+        sendButton.disabled = true;
     }
 }
 
@@ -430,6 +516,10 @@ function addMessageToChat(name: string, message: string, timestamp: string, isOw
     `;
     messagesContainer.appendChild(messageDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+export function showSystemMessage(message: string) {
+    addMessageToChat('System', message, new Date().toISOString(), false);
 }
 
 // Send message function
@@ -513,7 +603,7 @@ export function disconnectFromEvents() {
     }
 }
 
-function establishSseConnection() {
+export function establishSseConnection() {
     disconnectFromEvents(); // Ensure any existing connection is closed
 
     const userData = getUserData();

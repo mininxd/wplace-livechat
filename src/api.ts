@@ -1,11 +1,13 @@
 /// <reference types="@types/greasemonkey" />
 
-import { getRegionData, setRegionData } from './state';
+import { getRegionData, setRegionData, setPixelData } from './state';
 
 const API_BASE = 'https://wplace-live-chat-server.vercel.app';
 const debug = false;
 let regionDataPoller: any = null;
 let lastCheckedUrl = '';
+let lastRegionChangeTimestamp = 0;
+const REGION_CHANGE_COOLDOWN = 5000; // 5 seconds
 
 export const fetchAPI = async (url: string, options = {}) => {
     try {
@@ -94,30 +96,54 @@ export function sendMessage(uid: string, name: string, message: string, region: 
     });
 }
 
-async function checkForPixelUrl() {
-    const regionData = getRegionData();
-    if (regionData) {
-        if (regionDataPoller) clearInterval(regionDataPoller);
-        return;
-    }
+const getRange = (value: number, rangeSize: number) => {
+    const start = Math.floor(value / rangeSize) * rangeSize;
+    const end = start + rangeSize - 1;
+    return `${start}-${end}`;
+};
 
+async function checkForPixelUrl() {
     const resources = performance.getEntriesByType("resource");
     const pixelResource = resources.reverse().find(r => r.name.includes("https://backend.wplace.live/s0/pixel/"));
 
     if (pixelResource && pixelResource.name !== lastCheckedUrl) {
         lastCheckedUrl = pixelResource.name;
-        const url = lastCheckedUrl.split('?')[0];
-        if (debug) console.log("Found pixel URL in performance entries:", url);
+
+        const now = Date.now();
+        if (now - lastRegionChangeTimestamp < REGION_CHANGE_COOLDOWN) {
+            const remaining = Math.ceil((REGION_CHANGE_COOLDOWN - (now - lastRegionChangeTimestamp)) / 1000);
+            document.dispatchEvent(new CustomEvent('regionChangeCooldown', { detail: { remaining } }));
+            return;
+        }
+
+        const url = new URL(lastCheckedUrl);
+        const baseUrl = `${url.protocol}//${url.host}${url.pathname}`;
+        if (debug) console.log("Found pixel URL in performance entries:", baseUrl);
 
         try {
-            const data = await fetchAPI(url);
+            const data = await fetchAPI(baseUrl);
             if (data && data.region && data.region.name) {
-                setRegionData(data.region);
-                if (debug) console.log("Region data fetched successfully:", getRegionData());
-                if (regionDataPoller) clearInterval(regionDataPoller);
+                const pathParts = url.pathname.split('/');
+                const boardId = pathParts[pathParts.length - 1];
 
-                // Dispatch a custom event to notify the rest of the script
-                document.dispatchEvent(new CustomEvent('regionDataFound'));
+                const x = url.searchParams.get('x');
+                const y = url.searchParams.get('y');
+
+                const currentRegion = getRegionData();
+                if (x && y && boardId) {
+                    const xRange = getRange(parseInt(x), 500);
+                    const yRange = getRange(parseInt(y), 500);
+                    const newRegionName = `${data.region.name}_${boardId}_${xRange}_${yRange}`;
+
+                    if (!currentRegion || currentRegion.name !== newRegionName) {
+                        lastRegionChangeTimestamp = Date.now();
+                        data.region.name = newRegionName;
+                        setPixelData({ x, y, boardId, xRange, yRange });
+                        setRegionData(data.region);
+                        if (debug) console.log("New region data set:", getRegionData());
+                        document.dispatchEvent(new CustomEvent('regionDataFound'));
+                    }
+                }
             }
         } catch (error) {
             if (debug) console.error("Error fetching region data from performance entry:", error);

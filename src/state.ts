@@ -1,8 +1,18 @@
 let userData: any = null;
 let regionData: any = null;
+let pixelData: any = null;
 let allianceData: any = null;
 let preloadedAllianceMessages: any = null;
 let currentChatRoom = 'region'; // 'region' or 'alliance'
+let displayedChatRoomId: string | null = null;
+
+export function getDisplayedChatRoomId() {
+    return displayedChatRoomId;
+}
+
+export function setDisplayedChatRoomId(id: string | null) {
+    displayedChatRoomId = id;
+}
 
 export function getPreloadedAllianceMessages() {
     return preloadedAllianceMessages;
@@ -26,6 +36,14 @@ export function getRegionData() {
 
 export function setRegionData(data: any) {
     regionData = data;
+}
+
+export function getPixelData() {
+    return pixelData;
+}
+
+export function setPixelData(data: any) {
+    pixelData = data;
 }
 
 export function getAllianceData() {

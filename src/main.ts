@@ -14,7 +14,9 @@ import {
     disconnectFromEvents,
     initializeUserData,
     updateUserInfo,
-    loadMessages
+    loadMessages,
+    establishSseConnection,
+    startCooldownDisplay
 } from './ui'
 
 /// <reference types="@types/greasemonkey" />
@@ -23,6 +25,13 @@ document.addEventListener('regionDataFound', () => {
     if (modal.classList.contains('show')) {
         updateUserInfo();
         loadMessages();
+        establishSseConnection();
+    }
+});
+
+document.addEventListener('regionChangeCooldown', (e: any) => {
+    if (modal.classList.contains('show')) {
+        startCooldownDisplay(e.detail.remaining);
     }
 });
 
