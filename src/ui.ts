@@ -1,4 +1,4 @@
-import { getSettings, loadSettings, setSettings, getUserData, getRegionData, getAllianceData, getCurrentChatRoom, setCurrentChatRoom, setUserData, setAllianceData, getPreloadedAllianceMessages, setPreloadedAllianceMessages, getPixelData } from './state';
+import { getSettings, loadSettings, setSettings, getUserData, getRegionData, getAllianceData, getCurrentChatRoom, setCurrentChatRoom, setUserData, setAllianceData, getPreloadedAllianceMessages, setPreloadedAllianceMessages, getPixelData, getDisplayedChatRoomId, setDisplayedChatRoomId } from './state';
 import { fetchMessages, sendMessage, fetchAPI, connectToEvents } from './api';
 import { gsap } from 'gsap';
 import { Draggable } from 'gsap/Draggable';
@@ -362,8 +362,9 @@ export async function loadMessages() {
             sendButton.disabled = true;
             return;
         }
-        chatRoomId = regionData.name;
-        chatRoomName = regionData.name.split('_')[0];
+        const regionNameParts = regionData.name.split('_');
+        chatRoomId = `${regionNameParts[0]}_${regionNameParts[1]}`;
+        chatRoomName = regionNameParts[0];
     } else if (currentChatRoom === 'alliance') {
         if (!userData || !userData.allianceId) {
              messagesContainer.innerHTML = `
@@ -393,32 +394,29 @@ export async function loadMessages() {
         return;
     }
 
-    try {
-        messagesContainer.innerHTML = `
-            <div class="loading-indicator">
-                <div class="m3-progress-bar" style="width: 50%; margin: 0 auto;"></div>
-                <div style="margin-top: 8px;">Loading messages for ${chatRoomName}...</div>
-            </div>
-        `;
+    if (chatRoomId === getDisplayedChatRoomId()) {
+        if (debug) console.log(`Messages for room ${chatRoomId} are already displayed. Skipping fetch.`);
+        return;
+    }
 
+    try {
         let response: any;
         const preloadedMessages = getPreloadedAllianceMessages();
 
-        // Use preloaded messages only on the initial load of the alliance chat
         if (currentChatRoom === 'alliance' && preloadedMessages) {
             if (debug) console.log("Using preloaded alliance messages.");
             response = preloadedMessages;
-            setPreloadedAllianceMessages(null); // Clear after use
+            setPreloadedAllianceMessages(null);
         } else {
             response = await fetchMessages(chatRoomId as string);
         }
 
         if (getCurrentChatRoom() !== initialChatRoom) {
-            if (debug) console.log(`Room changed from ${initialChatRoom} to ${getCurrentChatRoom()}. Aborting message load.`);
+            if (debug) console.log(`Room changed from ${initialChatRoom} to ${getCurrentChatRoom()}. Aborting message render.`);
             return;
         }
 
-        messagesContainer.innerHTML = ''; // Clear loading indicator
+        messagesContainer.innerHTML = '';
         if (response && response.data && response.data.length > 0) {
             if (debug) console.log(`Loaded ${response.data.length} messages for ${chatRoomName}`);
             response.data.forEach((msg: any) => {
@@ -443,22 +441,22 @@ export async function loadMessages() {
             `;
         }
 
+        setDisplayedChatRoomId(chatRoomId);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
         chatInput.disabled = false;
         sendButton.disabled = false;
     } catch (error) {
         if (debug) console.error('Error loading messages:', error);
-        if (isInitialLoad) {
-            messagesContainer.innerHTML = `
-                <div class="info-message">
-                    <i class="material-icons">warning</i>
-                    <div><strong>Failed to load messages</strong></div>
-                    <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Please check your connection and try again.</div>
-                </div>
-            `;
-            chatInput.disabled = true;
-            sendButton.disabled = true;
-        }
+        setDisplayedChatRoomId(null); // Clear displayed room on error
+        messagesContainer.innerHTML = `
+            <div class="info-message">
+                <i class="material-icons">warning</i>
+                <div><strong>Failed to load messages</strong></div>
+                <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Please check your connection and try again.</div>
+            </div>
+        `;
+        chatInput.disabled = true;
+        sendButton.disabled = true;
     }
 }
 
@@ -517,7 +515,8 @@ export async function handleSendMessage() {
             if (debug) console.error("Cannot send message, no region selected.");
             return;
         }
-        chatRoomId = regionData.name;
+        const regionNameParts = regionData.name.split('_');
+        chatRoomId = `${regionNameParts[0]}_${regionNameParts[1]}`;
     } else if (currentChatRoom === 'alliance') {
         if (!userData.allianceId) {
             if (debug) console.error("Cannot send message, not in an alliance.");
@@ -594,7 +593,8 @@ export function establishSseConnection() {
 
     if (currentChatRoom === 'region') {
         if (!regionData) return;
-        chatRoomId = regionData.name;
+        const regionNameParts = regionData.name.split('_');
+        chatRoomId = `${regionNameParts[0]}_${regionNameParts[1]}`;
     } else if (currentChatRoom === 'alliance') {
         if (!userData || !userData.allianceId) return;
         chatRoomId = `alliance_${userData.allianceId}`;
