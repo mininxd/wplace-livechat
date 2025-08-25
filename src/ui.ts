@@ -7,6 +7,27 @@ gsap.registerPlugin(Draggable);
 
 const debug = true;
 let eventSource: EventSource | null = null;
+let cooldownInterval: any = null;
+let cooldownRemaining = 0;
+
+export function startCooldownDisplay(duration: number) {
+    if (cooldownInterval) clearInterval(cooldownInterval);
+
+    cooldownRemaining = duration;
+    updateUserInfo(); // Initial display
+
+    cooldownInterval = setInterval(() => {
+        cooldownRemaining--;
+        if (cooldownRemaining > 0) {
+            updateUserInfo();
+        } else {
+            clearInterval(cooldownInterval);
+            cooldownInterval = null;
+            cooldownRemaining = 0;
+            updateUserInfo(); // Final update to remove the cooldown display
+        }
+    }, 1000);
+}
 
 // Create floating action button
 export const fab = document.createElement('button');
@@ -100,6 +121,12 @@ settingsModal.innerHTML = `
     </div>
 `;
 document.body.appendChild(settingsModal);
+
+// Create info popup
+export const infoPopup = document.createElement('div');
+infoPopup.className = 'livechat-info-popup';
+document.body.appendChild(infoPopup);
+
 
 // Get elements
 export const regionMessages = document.getElementById('region-messages') as HTMLElement;
@@ -244,7 +271,11 @@ export function updateUserInfo() {
 
         if (currentChatRoom === 'region') {
             if (regionData && pixelData) {
-                regionInfo = `${regionName} #${pixelData.boardId}`;
+                let cooldownText = '';
+                if (cooldownRemaining > 0) {
+                    cooldownText = ` <span style="opacity: 0.7;">(cooldown: ${cooldownRemaining}s)</span><i class="material-icons cooldown-info-icon" id="cooldown-info">info_outline</i>`;
+                }
+                regionInfo = `${regionName} #${pixelData.boardId}${cooldownText}`;
                 areaInfo = `Area: ${pixelData.xRange} | ${pixelData.yRange}`;
             } else {
                 regionInfo = `${regionName}`;
@@ -263,6 +294,21 @@ export function updateUserInfo() {
             `}
             <div class="game-status"><i class="material-icons" style="color: #4CAF50; font-size: 8px;">circle</i> Level ${Math.floor(userData.level)}</div>
         `;
+
+        if (cooldownRemaining > 0) {
+            const infoIcon = document.getElementById('cooldown-info');
+            if (infoIcon) {
+                infoIcon.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    infoPopup.textContent = `You can change regions again in ${cooldownRemaining} seconds.`;
+                    const rect = infoIcon.getBoundingClientRect();
+                    infoPopup.style.left = `${rect.left + window.scrollX}px`;
+                    infoPopup.style.top = `${rect.bottom + window.scrollY + 5}px`;
+                    infoPopup.classList.add('show');
+                    setTimeout(() => infoPopup.classList.remove('show'), 3000);
+                });
+            }
+        }
     } else {
         userInfo.innerHTML = `
             <h3><i class="material-icons">person</i> Loading...</h3>
@@ -386,15 +432,15 @@ export async function loadMessages() {
                 });
             } else {
                 if (debug) console.log(`No messages found for ${chatRoomName}`);
-                let welcomeMessage = '';
+                let welcomeMessage = `
+                    <div><strong>Welcome to ${chatRoomName} chat!</strong></div>
+                    <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Be the first to start the conversation.</div>
+                `;
+
                 if (currentChatRoom === 'region' && pixelData) {
-                    welcomeMessage = `<div><strong>current region : ${pixelData.boardId} | ${pixelData.x} ${pixelData.y}</strong></div>`;
-                } else {
-                    welcomeMessage = `
-                        <div><strong>Welcome to ${chatRoomName} chat!</strong></div>
-                        <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Be the first to start the conversation.</div>
-                    `;
+                    welcomeMessage += `<div style="font-size: 10px; margin-top: 16px; opacity: 0.6;">current region : ${pixelData.boardId} | ${pixelData.x} ${pixelData.y}</div>`;
                 }
+
                 messagesContainer.innerHTML = `
                     <div class="info-message">
                         <i class="material-icons">chat</i>
