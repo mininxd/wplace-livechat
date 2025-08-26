@@ -11,10 +11,18 @@ const app = express();
 const prisma = new PrismaClient();
 
 // Connect to Redis
-if (!process.env.REDIS_URL) {
-  throw new Error("REDIS_URL is not defined in the environment variables");
+if (!process.env.REDIS_HOST || !process.env.REDIS_PORT || !process.env.REDIS_USER || !process.env.REDIS_PASS) {
+  throw new Error("One or more Redis environment variables (REDIS_HOST, REDIS_PORT, REDIS_USER, REDIS_PASS) are not defined.");
 }
-const redis = new Redis(process.env.REDIS_URL);
+
+const redisOptions = {
+  host: process.env.REDIS_HOST,
+  port: parseInt(process.env.REDIS_PORT, 10),
+  username: process.env.REDIS_USER,
+  password: process.env.REDIS_PASS,
+};
+
+const redis = new Redis(redisOptions);
 
 // Helper function to sleep for a given number of milliseconds
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -160,7 +168,7 @@ app.get("/events/:region", (req, res) => {
   // Note: This creates a new Redis connection for each client.
   // For very large scale, a shared subscriber with a client mapping might be better,
   // but this approach is simpler and robust for multi-instance deployments.
-  const subscriber = new Redis(process.env.REDIS_URL);
+  const subscriber = new Redis(redisOptions);
 
   // Set headers for SSE
   res.setHeader("Content-Type", "text/event-stream");
