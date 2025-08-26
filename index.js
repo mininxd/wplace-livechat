@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import { PrismaClient } from "@prisma/client";
+import Redis from "ioredis";
 import rateLimit from "express-rate-limit";
 import cors from "cors";
 import helmet from "helmet";
@@ -9,8 +10,11 @@ import helmet from "helmet";
 const app = express();
 const prisma = new PrismaClient();
 
-// In-memory store for connected SSE clients, keyed by region
-const clients = new Map();
+// Connect to Redis
+if (!process.env.REDIS_URL) {
+  throw new Error("REDIS_URL is not defined in the environment variables");
+}
+const redis = new Redis(process.env.REDIS_URL);
 
 // Helper function to sleep for a given number of milliseconds
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -83,12 +87,24 @@ app.get("/", async (req, res) => {
 // GET /messages/:region - for fetching initial chat history
 app.get("/messages/:region", async (req, res) => {
   const { region } = req.params;
+  const cacheKey = `messages:${region}`;
 
   try {
+    // Check cache first
+    const cachedMessages = await redis.get(cacheKey);
+    if (cachedMessages) {
+      return res.json({ data: JSON.parse(cachedMessages) });
+    }
+
+    // If not in cache, fetch from DB
     const messages = await withRetry(() => prisma.users.findMany({
       where: { region },
       orderBy: { createdAt: "asc" },
     }));
+
+    // Store in cache with a 60-second expiration
+    await redis.set(cacheKey, JSON.stringify(messages), "EX", 60);
+
     res.json({ data: messages });
   } catch (err) {
     console.error(err);
@@ -99,8 +115,16 @@ app.get("/messages/:region", async (req, res) => {
 // GET /users/:region
 app.get("/users/:region", async (req, res) => {
   const { region } = req.params;
+  const cacheKey = `users:${region}`;
 
   try {
+    // Check cache first
+    const cachedUsers = await redis.get(cacheKey);
+    if (cachedUsers) {
+      return res.json({ data: JSON.parse(cachedUsers) });
+    }
+
+    // If not in cache, fetch from DB
     const users = await withRetry(() => prisma.users.findMany({
       where: { region },
       orderBy: { createdAt: "asc" },
@@ -111,6 +135,9 @@ app.get("/users/:region", async (req, res) => {
         createdAt: true,
       },
     }));
+
+    // Store in cache with a 60-second expiration
+    await redis.set(cacheKey, JSON.stringify(users), "EX", 60);
 
     res.json({ data: users });
   } catch (err) {
@@ -127,6 +154,13 @@ app.get("/users", (req, res) => {
 // SSE endpoint to stream messages
 app.get("/events/:region", (req, res) => {
   const { region } = req.params;
+  const channel = `chat:${region}`;
+
+  // Create a new subscriber client for this connection.
+  // Note: This creates a new Redis connection for each client.
+  // For very large scale, a shared subscriber with a client mapping might be better,
+  // but this approach is simpler and robust for multi-instance deployments.
+  const subscriber = new Redis(process.env.REDIS_URL);
 
   // Set headers for SSE
   res.setHeader("Content-Type", "text/event-stream");
@@ -134,25 +168,25 @@ app.get("/events/:region", (req, res) => {
   res.setHeader("Connection", "keep-alive");
   res.flushHeaders();
 
-  // Add client to the map
-  if (!clients.has(region)) {
-    clients.set(region, []);
-  }
-  const regionClients = clients.get(region);
-  regionClients.push(res);
+  subscriber.subscribe(channel, (err) => {
+    if (err) {
+      console.error(`Failed to subscribe to ${channel}`, err);
+      return res.status(500).end();
+    }
+    // Welcome message
+    res.write("data: Connected\n\n");
+  });
 
-  // Welcome message
-  res.write("data: Connected\n\n");
+  subscriber.on("message", (ch, message) => {
+    if (ch === channel) {
+      res.write(`data: ${message}\n\n`);
+    }
+  });
 
   // Handle client disconnection
   req.on("close", () => {
-    const index = regionClients.indexOf(res);
-    if (index !== -1) {
-      regionClients.splice(index, 1);
-    }
-    if (regionClients.length === 0) {
-      clients.delete(region);
-    }
+    subscriber.unsubscribe(channel);
+    subscriber.quit();
   });
 });
 
@@ -176,12 +210,13 @@ app.post("/send", sendLimiter, async (req, res) => {
       data: dataToCreate,
     }));
 
-    // Send event to all clients in the region
-    if (clients.has(region)) {
-      const regionClients = clients.get(region);
-      const sseMessage = `data: ${JSON.stringify(newMessage)}\n\n`;
-      regionClients.forEach(client => client.write(sseMessage));
-    }
+    // Invalidate cache
+    const cacheKeys = [`messages:${region}`, `users:${region}`];
+    await redis.del(cacheKeys);
+
+    // Publish message to Redis
+    const channel = `chat:${region}`;
+    await redis.publish(channel, JSON.stringify(newMessage));
 
     res.status(201).json({ status: "success", data: newMessage });
   } catch (err) {
