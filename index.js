@@ -10,19 +10,37 @@ import helmet from "helmet";
 const app = express();
 const prisma = new PrismaClient();
 
-// Connect to Redis
-if (!process.env.REDIS_HOST || !process.env.REDIS_PORT || !process.env.REDIS_USER || !process.env.REDIS_PASS) {
-  throw new Error("One or more Redis environment variables (REDIS_HOST, REDIS_PORT, REDIS_USER, REDIS_PASS) are not defined.");
+// Conditionally connect to Redis
+let redis;
+let redisOptions;
+let isRedisEnabled = false;
+
+if (process.env.REDIS_HOST && process.env.REDIS_PORT && process.env.REDIS_USER && process.env.REDIS_PASS) {
+  isRedisEnabled = true;
+
+  redisOptions = {
+    host: process.env.REDIS_HOST,
+    port: parseInt(process.env.REDIS_PORT, 10),
+    username: process.env.REDIS_USER,
+    password: process.env.REDIS_PASS,
+    // Add a connection timeout to prevent long hangs if Redis is down
+    connectTimeout: 10000,
+  };
+
+  redis = new Redis(redisOptions);
+
+  redis.on('error', err => {
+    console.error('A Redis error occurred, disabling Redis features for safety.', err);
+    isRedisEnabled = false; // Gracefully degrade to in-memory provider
+  });
+
+  console.log("Redis is enabled.");
+} else {
+  console.log("Redis is not configured, falling back to in-memory provider.");
 }
 
-const redisOptions = {
-  host: process.env.REDIS_HOST,
-  port: parseInt(process.env.REDIS_PORT, 10),
-  username: process.env.REDIS_USER,
-  password: process.env.REDIS_PASS,
-};
-
-const redis = new Redis(redisOptions);
+// In-memory store for SSE clients, used as a fallback
+const clients = new Map();
 
 // Helper function to sleep for a given number of milliseconds
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -97,21 +115,34 @@ app.get("/messages/:region", async (req, res) => {
   const { region } = req.params;
   const cacheKey = `messages:${region}`;
 
-  try {
-    // Check cache first
-    const cachedMessages = await redis.get(cacheKey);
-    if (cachedMessages) {
-      return res.json({ data: JSON.parse(cachedMessages) });
+  if (isRedisEnabled) {
+    try {
+      const cachedMessages = await redis.get(cacheKey);
+      if (cachedMessages) {
+        return res.json({ data: JSON.parse(cachedMessages) });
+      }
+    } catch (err) {
+      console.error(`Redis cache read error for key ${cacheKey}:`, err);
+      // Don't fail the request, just proceed to DB
     }
+  }
 
-    // If not in cache, fetch from DB
+  try {
+    // If not in cache or Redis is disabled, fetch from DB
     const messages = await withRetry(() => prisma.users.findMany({
       where: { region },
       orderBy: { createdAt: "asc" },
     }));
 
-    // Store in cache with a 60-second expiration
-    await redis.set(cacheKey, JSON.stringify(messages), "EX", 60);
+    // If Redis is enabled, store in cache
+    if (isRedisEnabled) {
+      try {
+        // Store in cache with a 60-second expiration
+        await redis.set(cacheKey, JSON.stringify(messages), "EX", 60);
+      } catch (err) {
+        console.error(`Redis cache write error for key ${cacheKey}:`, err);
+      }
+    }
 
     res.json({ data: messages });
   } catch (err) {
@@ -125,14 +156,20 @@ app.get("/users/:region", async (req, res) => {
   const { region } = req.params;
   const cacheKey = `users:${region}`;
 
-  try {
-    // Check cache first
-    const cachedUsers = await redis.get(cacheKey);
-    if (cachedUsers) {
-      return res.json({ data: JSON.parse(cachedUsers) });
+  if (isRedisEnabled) {
+    try {
+      const cachedUsers = await redis.get(cacheKey);
+      if (cachedUsers) {
+        return res.json({ data: JSON.parse(cachedUsers) });
+      }
+    } catch (err) {
+      console.error(`Redis cache read error for key ${cacheKey}:`, err);
+      // Don't fail the request, just proceed to DB
     }
+  }
 
-    // If not in cache, fetch from DB
+  try {
+    // If not in cache or Redis is disabled, fetch from DB
     const users = await withRetry(() => prisma.users.findMany({
       where: { region },
       orderBy: { createdAt: "asc" },
@@ -144,8 +181,15 @@ app.get("/users/:region", async (req, res) => {
       },
     }));
 
-    // Store in cache with a 60-second expiration
-    await redis.set(cacheKey, JSON.stringify(users), "EX", 60);
+    // If Redis is enabled, store in cache
+    if (isRedisEnabled) {
+      try {
+        // Store in cache with a 60-second expiration
+        await redis.set(cacheKey, JSON.stringify(users), "EX", 60);
+      } catch (err) {
+        console.error(`Redis cache write error for key ${cacheKey}:`, err);
+      }
+    }
 
     res.json({ data: users });
   } catch (err) {
@@ -162,13 +206,6 @@ app.get("/users", (req, res) => {
 // SSE endpoint to stream messages
 app.get("/events/:region", (req, res) => {
   const { region } = req.params;
-  const channel = `chat:${region}`;
-
-  // Create a new subscriber client for this connection.
-  // Note: This creates a new Redis connection for each client.
-  // For very large scale, a shared subscriber with a client mapping might be better,
-  // but this approach is simpler and robust for multi-instance deployments.
-  const subscriber = new Redis(redisOptions);
 
   // Set headers for SSE
   res.setHeader("Content-Type", "text/event-stream");
@@ -176,26 +213,50 @@ app.get("/events/:region", (req, res) => {
   res.setHeader("Connection", "keep-alive");
   res.flushHeaders();
 
-  subscriber.subscribe(channel, (err) => {
-    if (err) {
-      console.error(`Failed to subscribe to ${channel}`, err);
-      return res.status(500).end();
-    }
-    // Welcome message
-    res.write("data: Connected\n\n");
-  });
+  // Welcome message
+  res.write("data: Connected\n\n");
 
-  subscriber.on("message", (ch, message) => {
-    if (ch === channel) {
-      res.write(`data: ${message}\n\n`);
-    }
-  });
+  if (isRedisEnabled) {
+    // USE REDIS PUB/SUB
+    const channel = `chat:${region}`;
+    const subscriber = new Redis(redisOptions);
 
-  // Handle client disconnection
-  req.on("close", () => {
-    subscriber.unsubscribe(channel);
-    subscriber.quit();
-  });
+    subscriber.subscribe(channel, (err) => {
+      if (err) {
+        console.error(`Failed to subscribe to ${channel}`, err);
+        return res.status(500).end();
+      }
+    });
+
+    subscriber.on("message", (ch, message) => {
+      if (ch === channel) {
+        res.write(`data: ${message}\n\n`);
+      }
+    });
+
+    req.on("close", () => {
+      subscriber.unsubscribe(channel);
+      subscriber.quit();
+    });
+
+  } else {
+    // USE IN-MEMORY FALLBACK
+    if (!clients.has(region)) {
+      clients.set(region, []);
+    }
+    const regionClients = clients.get(region);
+    regionClients.push(res);
+
+    req.on("close", () => {
+      const index = regionClients.indexOf(res);
+      if (index !== -1) {
+        regionClients.splice(index, 1);
+      }
+      if (regionClients.length === 0) {
+        clients.delete(region);
+      }
+    });
+  }
 });
 
 // POST /send - rate-limited + input validation
@@ -218,13 +279,23 @@ app.post("/send", sendLimiter, async (req, res) => {
       data: dataToCreate,
     }));
 
-    // Invalidate cache
-    const cacheKeys = [`messages:${region}`, `users:${region}`];
-    await redis.del(cacheKeys);
+    if (isRedisEnabled) {
+      // Invalidate cache and publish message to Redis
+      const cacheKeys = [`messages:${region}`, `users:${region}`];
+      const channel = `chat:${region}`;
 
-    // Publish message to Redis
-    const channel = `chat:${region}`;
-    await redis.publish(channel, JSON.stringify(newMessage));
+      // Fire-and-forget cache invalidation and publish, with error logging
+      redis.del(cacheKeys).catch(err => console.error("Redis cache invalidation error:", err));
+      redis.publish(channel, JSON.stringify(newMessage)).catch(err => console.error("Redis publish error:", err));
+
+    } else {
+      // In-memory fallback: Send event to all clients in the region
+      if (clients.has(region)) {
+        const regionClients = clients.get(region);
+        const sseMessage = `data: ${JSON.stringify(newMessage)}\n\n`;
+        regionClients.forEach(client => client.write(sseMessage));
+      }
+    }
 
     res.status(201).json({ status: "success", data: newMessage });
   } catch (err) {
