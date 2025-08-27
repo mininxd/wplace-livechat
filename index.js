@@ -304,6 +304,55 @@ app.post("/send", sendLimiter, async (req, res) => {
   }
 });
 
+// GET /get_pixeldata - for fetching pixel data
+app.get("/get_pixeldata", async (req, res) => {
+  try {
+    const pixelData = await withRetry(() => prisma.pixel_data.findFirst({}));
+    if (pixelData) {
+      res.json({ data: pixelData });
+    } else {
+      res.status(404).json({ error: "No pixel data found" });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch pixel data" });
+  }
+});
+
+// POST /upload_data - to upload new pixel data, replacing the old one
+app.post("/upload_data", async (req, res) => {
+  const { total_pixel_count, total_processed_files, color_data } = req.body;
+
+  if (
+    typeof total_pixel_count !== 'number' ||
+    typeof total_processed_files !== 'number' ||
+    typeof color_data !== 'object' ||
+    color_data === null
+  ) {
+    return res.status(400).json({ error: "Invalid input format" });
+  }
+
+  const dataToCreate = {
+    total_pixel_count,
+    total_processed_files,
+    color_data,
+  };
+
+  try {
+    // Use a transaction to delete old data and create new data atomically
+    const result = await withRetry(() => prisma.$transaction([
+      prisma.pixel_data.deleteMany({}),
+      prisma.pixel_data.create({ data: dataToCreate }),
+    ]));
+
+    res.status(201).json({ status: "success", data: result[1] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to upload pixel data" });
+  }
+});
+
+
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

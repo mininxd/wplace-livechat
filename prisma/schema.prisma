@@ -16,3 +16,11 @@ model users {
   messages  String   @db.VarChar(128)
   createdAt DateTime @default(now())
 }
+
+model Pixel_data {
+  id                    Int      @id @default(autoincrement())
+  total_pixel_count     Int
+  total_processed_files Int
+  color_data            Json
+  createdAt             DateTime @default(now())
+}
