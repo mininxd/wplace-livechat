@@ -309,7 +309,8 @@ app.get("/get_pixeldata", async (req, res) => {
   try {
     const pixelData = await withRetry(() => prisma.pixel_data.findFirst({}));
     if (pixelData) {
-      res.json({ data: pixelData });
+      const { id, createdAt, ...response_data } = pixelData;
+      res.json(response_data);
     } else {
       res.status(404).json({ error: "No pixel data found" });
     }
