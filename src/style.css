@@ -2,16 +2,26 @@
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
 :root {
-    --primary-color: #007bff;
-    --secondary-color: #6c757d;
-    --background-color: #f8f9fa;
-    --surface-color: #ffffff;
-    --on-primary-color: #ffffff;
-    --on-background-color: #212529;
-    --on-surface-color: #495057;
-    --on-surface-variant-color: #6c757d;
-    --outline-color: #dee2e6;
-    --shadow-color: rgba(0, 0, 0, 0.1);
+    --sys-color-primary: #1a73e8;
+    --sys-color-primary-dark: #1a63d3;
+    --sys-color-on-primary: #ffffff;
+    --sys-color-primary-container: #d6e2ff;
+    --sys-color-on-primary-container: #001a41;
+    --sys-color-secondary: #565f71;
+    --sys-color-on-secondary: #ffffff;
+    --sys-color-secondary-container: #dae2f9;
+    --sys-color-on-secondary-container: #131c2b;
+    --sys-color-tertiary: #d63384;
+    --sys-color-on-tertiary: #ffffff;
+    --sys-color-tertiary-container: #ffd7ec;
+    --sys-color-on-tertiary-container: #30001f;
+    --sys-color-surface: #fdfbff;
+    --sys-color-on-surface: #1b1b1f;
+    --sys-color-surface-variant: #e1e2ec;
+    --sys-color-on-surface-variant: #44474f;
+    --sys-color-outline: #74777f;
+    --sys-color-shadow: #000000;
+    --sys-color-surface-container-highest: #e6e0e9;
 }
 
 .livechat-container {
@@ -24,14 +34,14 @@
     position: fixed;
     bottom: 20vh;
     right: 24px;
-    background: var(--primary-color);
-    color: var(--on-primary-color);
+    background: var(--sys-color-primary);
+    color: var(--sys-color-on-primary);
     border: none;
     width: 56px;
     height: 56px;
-    border-radius: 16px;
+    border-radius: 50%;
     cursor: pointer;
-    box-shadow: 0 4px 12px var(--shadow-color);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 10001;
     display: flex !important;
@@ -47,8 +57,8 @@
 
 .livechat-fab:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px var(--shadow-color);
-    background: #0069d9;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    background: var(--sys-color-primary-dark);
 }
 
 .livechat-modal {
@@ -57,7 +67,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
     display: none;
     align-items: center;
     justify-content: center;
@@ -69,26 +79,26 @@
 }
 
 .livechat-content {
-    background: var(--background-color);
-    border-radius: 16px;
+    background: var(--sys-color-surface);
+    border-radius: 24px;
     width: 400px;
     height: 600px;
     max-width: 90vw;
-    max-height: 80vh;
+    max-height: 90vh;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 12px 32px var(--shadow-color);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
     overflow: hidden;
-    border: 1px solid var(--outline-color);
+    border: 1px solid var(--sys-color-outline);
 }
 
 .livechat-header {
-    background: var(--surface-color);
-    color: var(--on-background-color);
+    background: linear-gradient(135deg, var(--sys-color-primary), var(--sys-color-primary-dark));
+    color: var(--sys-color-on-primary);
     padding: 12px 24px 0;
     display: flex;
     flex-direction: column;
-    border-bottom: 1px solid var(--outline-color);
+    border-bottom: 1px solid var(--sys-color-outline);
 }
 
 .livechat-header-main {
@@ -105,12 +115,12 @@
 }
 
 .livechat-settings-btn {
-    background: transparent;
+    background: rgba(255, 255, 255, 0.2);
     border: none;
     border-radius: 50%;
     width: 32px;
     height: 32px;
-    color: var(--on-surface-color);
+    color: var(--sys-color-on-primary);
     cursor: pointer;
     font-size: 18px;
     transition: background 0.2s;
@@ -121,7 +131,7 @@
 }
 
 .livechat-settings-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .livechat-settings-modal {
@@ -130,28 +140,28 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 10003;
+    z-index: 10003; /* Higher than chat modal */
 }
 
 .livechat-settings-content {
-    background: var(--surface-color);
-    color: var(--on-background-color);
+    background: var(--sys-color-surface);
+    color: var(--sys-color-on-surface);
     padding: 24px;
     border-radius: 16px;
     width: 300px;
     max-width: 90vw;
-    box-shadow: 0 12px 24px var(--shadow-color);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.2);
     position: relative;
 }
 
 .livechat-settings-content h4 {
     margin-top: 0;
     margin-bottom: 24px;
-    border-bottom: 1px solid var(--outline-color);
+    border-bottom: 1px solid var(--sys-color-outline);
     padding-bottom: 12px;
 }
 
@@ -160,8 +170,10 @@
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
+    /* Makes it clear the whole row is clickable */
 }
 
+/* Material 3 Switch Styles */
 .m3-switch {
     position: relative;
     width: 52px;
@@ -183,8 +195,8 @@
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: #e9ecef;
-    border: 2px solid var(--outline-color);
+    background-color: var(--sys-color-surface-variant);
+    border: 2px solid var(--sys-color-outline);
     border-radius: 16px;
     transition: all 0.2s;
 }
@@ -204,14 +216,15 @@
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background-color: var(--on-surface-variant-color);
-    box-shadow: 0 1px 3px var(--shadow-color);
+    background-color: var(--sys-color-outline);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     transition: all 0.2s;
 }
 
+/* Checked state */
 .m3-switch input:checked+.m3-switch-track {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
+    background-color: var(--sys-color-primary);
+    border-color: var(--sys-color-primary);
 }
 
 .m3-switch input:checked~.m3-switch-thumb-container {
@@ -221,11 +234,12 @@
 }
 
 .m3-switch input:checked~.m3-switch-thumb-container .m3-switch-thumb {
-    background-color: var(--on-primary-color);
+    background-color: var(--sys-color-on-primary);
 }
 
+/* Hover state */
 .setting-item:hover .m3-switch-thumb {
-    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
 }
 
 .livechat-settings-close {
@@ -237,7 +251,7 @@
     border-radius: 50%;
     width: 32px;
     height: 32px;
-    color: var(--on-surface-variant-color);
+    color: var(--sys-color-on-surface-variant);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -245,12 +259,12 @@
 }
 
 .livechat-settings-close:hover {
-    background-color: #e9ecef;
+    background-color: var(--sys-color-surface-variant);
 }
 
 .livechat-tabs {
     display: flex;
-    border-top: 1px solid var(--outline-color);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
     margin: 0 -24px;
     padding: 0 12px;
 }
@@ -259,20 +273,21 @@
     padding: 12px 16px;
     cursor: pointer;
     border-bottom: 2px solid transparent;
-    color: var(--secondary-color);
+    color: var(--sys-color-on-primary);
+    opacity: 0.7;
     transition: all 0.2s;
     font-size: 14px;
     font-weight: 500;
 }
 
 .livechat-tab.active {
-    color: var(--primary-color);
-    border-bottom-color: var(--primary-color);
+    opacity: 1;
+    border-bottom-color: var(--sys-color-on-primary);
 }
 
 .livechat-tab:hover {
-    color: var(--primary-color);
-    background: rgba(0, 123, 255, 0.05);
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .livechat-user-info h3 {
@@ -306,7 +321,7 @@
     padding: 8px 12px;
     border-radius: 8px;
     font-size: 12px;
-    z-index: 10004;
+    z-index: 10004; /* Higher than settings modal */
     pointer-events: none;
     opacity: 0;
     transform: scale(0.9);
@@ -325,12 +340,12 @@
 }
 
 .livechat-close {
-    background: transparent;
+    background: rgba(255, 255, 255, 0.2);
     border: none;
     border-radius: 50%;
     width: 32px;
     height: 32px;
-    color: var(--on-surface-color);
+    color: var(--sys-color-on-primary);
     cursor: pointer;
     font-size: 18px;
     transition: background 0.2s;
@@ -340,16 +355,16 @@
 }
 
 .livechat-close:hover {
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .livechat-messages {
     flex: 1;
-    padding: 16px;
+    padding: 20px;
     overflow-y: auto;
-    background: var(--background-color);
+    background: var(--sys-color-surface);
     scrollbar-width: thin;
-    scrollbar-color: var(--primary-color) transparent;
+    scrollbar-color: var(--sys-color-primary) transparent;
 }
 
 .livechat-messages::-webkit-scrollbar {
@@ -357,12 +372,12 @@
 }
 
 .livechat-messages::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
+    background: var(--sys-color-primary);
     border-radius: 3px;
 }
 
 .chat-message {
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     animation: slideIn 0.3s ease-out;
     display: flex;
     flex-direction: column;
@@ -376,94 +391,91 @@
 .message-author {
     font-size: 12px;
     font-weight: 600;
-    color: var(--secondary-color);
+    color: var(--sys-color-secondary);
     margin-bottom: 4px;
-    margin-left: 12px;
-}
-
-.chat-message.own .message-author {
-    margin-left: 0;
-    margin-right: 12px;
 }
 
 .message-content {
-    background: var(--surface-color);
-    padding: 12px 16px;
+    background: var(--sys-color-surface-container-highest);
+    padding: 14px 18px;
     border-radius: 18px;
-    box-shadow: 0 2px 4px var(--shadow-color);
-    border: 1px solid var(--outline-color);
-    font-size: 15px;
-    line-height: 1.5;
-    color: var(--on-background-color);
-    max-width: 85%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--sys-color-surface-variant);
+    font-size: 16px;
+    line-height: 1.4;
+    color: var(--sys-color-on-surface);
+    max-width: 80%;
     overflow-wrap: break-word;
     word-break: break-word;
 }
 
 .message-content.own {
-    background: var(--primary-color);
-    color: var(--on-primary-color);
-    border-color: var(--primary-color);
+    background: var(--sys-color-primary);
+    color: var(--sys-color-on-primary);
 }
 
 .message-content.own .message-author {
-    color: var(--on-primary-color);
+    color: var(--sys-color-on-primary);
 }
 
 .livechat-input-area {
     padding: 12px 16px;
-    background-color: var(--surface-color);
+    background-color: #FAFAFA;
     display: flex;
     gap: 8px;
-    align-items: flex-end;
-    border-top: 1px solid var(--outline-color);
+    align-items: center;
+    border-top-left-radius: 14px;
+    border-top-right-radius: 14px;
+    position: relative;
 }
 
 .livechat-input-wrapper {
     flex: 1;
-    position: relative;
 }
 
 .livechat-input {
     width: 100%;
     box-sizing: border-box;
-    border: 2px solid var(--outline-color);
-    border-radius: 20px;
-    padding: 10px 16px;
-    font-size: 15px;
+    border: 2px solid var(--sys-color-surface-variant);
+    border-radius: 28px;
+    padding: 14px 60px 14px 20px;
+    font-size: 16px;
     font-family: 'Rubik', sans-serif;
     resize: none;
     min-height: 24px;
     max-height: 120px;
-    background: var(--background-color);
+    background: transparent;
     transition: border-color 0.2s;
     outline: none;
     overflow-y: hidden;
 }
 
 .livechat-input:focus {
-    border-color: var(--primary-color);
+    border-color: var(--sys-color-primary);
 }
 
 .livechat-input.input-error {
-    border-color: #dc3545;
+    border-color: #F44336; /* Red for error */
 }
 
 .livechat-input:disabled {
-    opacity: 0.7;
+    opacity: 0.5;
     cursor: not-allowed;
 }
 
 .livechat-send {
-    position: relative;
-    background: var(--primary-color);
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--sys-color-primary);
     border: none;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    color: var(--on-primary-color);
+    width: 48px;
+    height: 48px;
+    color: var(--sys-color-on-primary);
     cursor: pointer;
-    font-size: 20px;
+    font-size: 24px;
     transition: all 0.2s;
     display: flex;
     align-items: center;
@@ -472,21 +484,19 @@
 
 .livechat-send:hover:not(:disabled) {
     transform: scale(1.05);
-    box-shadow: 0 2px 8px var(--shadow-color);
-    background: #0069d9;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    background: var(--sys-color-secondary);
 }
 
 .livechat-send:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     transform: none;
-    background: var(--secondary-color);
 }
 
 .game-status {
     font-size: 11px;
-    background: rgba(0, 0, 0, 0.05);
-    color: var(--on-surface-color);
+    background: rgba(255, 255, 255, 0.2);
     padding: 4px 8px;
     border-radius: 8px;
     margin-top: 4px;
@@ -497,30 +507,29 @@
     font-size: 10px;
     opacity: 0.6;
     margin-top: 4px;
-    color: var(--on-surface-variant-color);
+    color: var(--sys-color-on-surface-variant);
 }
 
 .message-content.own .message-timestamp {
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.7);
 }
 
-.loading-indicator,
-.info-message {
+.loading-indicator, .info-message {
     text-align: center;
     padding: 20px;
-    color: var(--on-surface-variant-color);
+    color: var(--sys-color-on-surface-variant);
 }
 
 .info-message {
-    background: #e9ecef;
+    background: var(--sys-color-primary-container);
     border-radius: 12px;
     margin: 16px;
-    border: 1px solid var(--outline-color);
+    border: 1px solid var(--sys-color-outline);
 }
 
 .info-message i {
     font-size: 24px;
-    color: var(--primary-color);
+    color: var(--sys-color-primary);
     margin-bottom: 8px;
     display: block;
 }
@@ -540,7 +549,7 @@
     position: relative;
     width: 100%;
     height: 4px;
-    background-color: #e9ecef;
+    background-color: var(--sys-color-surface-variant);
     border-radius: 2px;
     overflow: hidden;
 }
@@ -552,7 +561,7 @@
     left: 0;
     height: 100%;
     width: 40%;
-    background-color: var(--primary-color);
+    background-color: var(--sys-color-primary);
     border-radius: 2px;
     animation: m3-progress-single-line 1.5s linear infinite;
 }
