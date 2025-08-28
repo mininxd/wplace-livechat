@@ -13,7 +13,7 @@ function getRoomNameFromRanges(xRange: string, yRange: string): string {
     return `${xRange}, ${yRange}`; // Fallback
 }
 
-const debug = true;
+const debug = import.meta.env.VITE_DEBUG === 'true';
 let eventSource: EventSource | null = null;
 let cooldownInterval: any = null;
 let cooldownRemaining = 0;
@@ -71,7 +71,6 @@ modal.innerHTML = `
                     <div class="livechat-user-details"><i class="material-icons">tag</i> ID: ...</div>
                     <div class="livechat-user-details"><i class="material-icons">place</i> Region: ...</div>
                     <div class="livechat-user-details" id="area-info"><i class="material-icons">my_location</i> Area: ...</div>
-                    <div class="game-status"><i class="material-icons" style="color: #4CAF50; font-size: 8px;">circle</i> Online</div>
                 </div>
                     <div class="livechat-header-actions">
                         <button class="livechat-settings-btn"><i class="material-icons">settings</i></button>
@@ -116,9 +115,19 @@ settingsModal.innerHTML = `
     <div class="livechat-settings-content">
         <h4>Chat Settings</h4>
         <label class="setting-item">
-            <span>Press Enter to send</span>
+            <span>Press Enter to Send</span>
             <div class="m3-switch">
                 <input type="checkbox" id="enter-to-send" />
+                <div class="m3-switch-track"></div>
+                <div class="m3-switch-thumb-container">
+                    <div class="m3-switch-thumb"></div>
+                </div>
+            </div>
+        </label>
+        <label class="setting-item">
+            <span>Lock Chat to Region</span>
+            <div class="m3-switch">
+                <input type="checkbox" id="lock-chat" />
                 <div class="m3-switch-track"></div>
                 <div class="m3-switch-thumb-container">
                     <div class="m3-switch-thumb"></div>
@@ -145,6 +154,7 @@ export const closeButton = modal.querySelector('.livechat-close') as HTMLButtonE
 const settingsButton = modal.querySelector('.livechat-settings-btn') as HTMLButtonElement;
 const settingsCloseButton = settingsModal.querySelector('.livechat-settings-close') as HTMLButtonElement;
 const enterToSendCheckbox = document.getElementById('enter-to-send') as HTMLInputElement;
+const lockChatCheckbox = document.getElementById('lock-chat') as HTMLInputElement;
 export const userInfo = document.getElementById('userInfo') as HTMLElement;
 export const chatTabs = document.getElementById('chatTabs') as HTMLElement;
 
@@ -152,6 +162,7 @@ export const chatTabs = document.getElementById('chatTabs') as HTMLElement;
 loadSettings();
 const settings = getSettings();
 enterToSendCheckbox.checked = settings.enterToSend;
+lockChatCheckbox.checked = settings.lockChat;
 
 // Settings modal listeners
 settingsButton.addEventListener('click', () => {
@@ -171,6 +182,10 @@ settingsModal.addEventListener('click', (e) => {
 // Setting change listener
 enterToSendCheckbox.addEventListener('change', (e) => {
     setSettings({ enterToSend: (e.target as HTMLInputElement).checked });
+});
+
+lockChatCheckbox.addEventListener('change', (e) => {
+    setSettings({ lockChat: (e.target as HTMLInputElement).checked });
 });
 
 
@@ -308,7 +323,7 @@ export function updateUserInfo() {
         userInfo.innerHTML = `
             <h3><i class="material-icons">person</i> ${userData.name} <span style="font-weight: 300; font-size: 14px;">#${userData.id}</span></h3>
             ${regionDisplay}
-            <div class="game-status"><i class="material-icons" style="color: #4CAF50; font-size: 8px;">circle</i> Level ${Math.floor(userData.level)}</div>
+            <div class="game-status">Level ${Math.floor(userData.level)}</div>
         `;
 
         if (cooldownRemaining > 0) {
@@ -316,7 +331,7 @@ export function updateUserInfo() {
             if (infoIcon) {
                 infoIcon.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    infoPopup.textContent = `You can change regions again in ${cooldownRemaining} seconds.`;
+                    infoPopup.textContent = `You can change regions once cooldown.`;
                     const rect = infoIcon.getBoundingClientRect();
                     infoPopup.style.left = `${rect.left + window.scrollX}px`;
                     infoPopup.style.top = `${rect.bottom + window.scrollY + 5}px`;
@@ -330,7 +345,7 @@ export function updateUserInfo() {
             <h3><i class="material-icons">person</i> Loading...</h3>
             <div class="livechat-user-details"><i class="material-icons">place</i> Region: ...</div>
             <div class="livechat-user-details" id="area-info"><i class="material-icons">my_location</i> Area: ...</div>
-            <div class="game-status"><i class="material-icons" style="color: #FF9800; font-size: 8px;">circle</i> Loading</div>
+            <div class="game-status">Loading</div>
         `;
     }
 
@@ -407,7 +422,7 @@ export async function loadMessages() {
                 <div class="info-message">
                     <i class="material-icons">near_me</i>
                     <div><strong>Tap on a pixel to join a region's chat</strong></div>
-                    <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Click on any pixel on the canvas to join the regional chat for that area.</div>
+                    <div style="font-size: 12px; margin-top: 8px; opacity: 0.75;">Click on any pixel on the canvas to join the regional chat for that area.</div>
                 </div>
             `;
             chatInput.disabled = true;
