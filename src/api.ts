@@ -43,7 +43,7 @@ export function fetchMessages(region: string) {
 
 export function connectToEvents(region: string, onMessage: (data: any) => void): EventSource {
     const url = `${API_BASE}/events/${region}`;
-    const eventSource = new EventSource(url, { withCredentials: true });
+    const eventSource = new EventSource(url);
 
     eventSource.onmessage = function(event) {
         try {
@@ -54,25 +54,10 @@ export function connectToEvents(region: string, onMessage: (data: any) => void):
         }
     };
 
-    let errorTimeout: any = null;
     eventSource.onerror = function(err) {
         console.error('EventSource failed:', err);
-
-        if (!errorTimeout) {
-            errorTimeout = setTimeout(() => {
-                console.error("SSE connection failed for 10 seconds. Closing connection.");
-                eventSource.close();
-            }, 10000);
-        }
         // The EventSource will automatically try to reconnect.
         // You might want to add logic here to handle repeated failures.
-    };
-
-    eventSource.onopen = function() {
-        if (errorTimeout) {
-            clearTimeout(errorTimeout);
-            errorTimeout = null;
-        }
     };
 
     return eventSource;
