@@ -1,6 +1,6 @@
 /// <reference types="@types/greasemonkey" />
 
-import { getRegionData, setRegionData, setPixelData, getSettings } from './state';
+import { getRegionData, setRegionData, setPixelData, getSettings, getCurrentChatRoom } from './state';
 
 const API_BASE = 'https://wplace-live-chat-server.vercel.app';
 const debug = false;
@@ -136,8 +136,8 @@ async function checkForPixelUrl() {
                     const newRegionName = `${data.region.name}_${boardId}_${xRange}_${yRange}`;
 
                     if (!currentRegion || currentRegion.name !== newRegionName) {
-                        if (getSettings().lockChat) {
-                            if (debug) console.log("Chat is locked, preventing region change.");
+                        if (getSettings().lockChat && getCurrentChatRoom() === 'region') {
+                            if (debug) console.log("Chat is locked and in region view, preventing region change.");
                             return;
                         }
                         lastRegionChangeTimestamp = Date.now();
