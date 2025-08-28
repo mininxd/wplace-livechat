@@ -136,8 +136,8 @@ async function checkForPixelUrl() {
                     const newRegionName = `${data.region.name}_${boardId}_${xRange}_${yRange}`;
 
                     if (!currentRegion || currentRegion.name !== newRegionName) {
-                        if (getSettings().lockChat && getCurrentChatRoom() === 'region') {
-                            if (debug) console.log("Chat is locked and in region view, preventing region change.");
+                        if (getSettings().lockChat && getCurrentChatRoom() === 'region' && getRegionData()) {
+                            if (debug) console.log("Chat is locked and in region view with a region already set, preventing region change.");
                             return;
                         }
                         lastRegionChangeTimestamp = Date.now();
