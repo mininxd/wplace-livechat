@@ -13,7 +13,7 @@ function getRoomNameFromRanges(xRange: string, yRange: string): string {
     return `${xRange}, ${yRange}`; // Fallback
 }
 
-const debug = true;
+const debug = import.meta.env.VITE_DEBUG === 'true';
 let eventSource: EventSource | null = null;
 let cooldownInterval: any = null;
 let cooldownRemaining = 0;

@@ -3,7 +3,7 @@
 import { getRegionData, setRegionData, setPixelData, getSettings, getCurrentChatRoom } from './state';
 
 const API_BASE = 'https://wplace-live-chat-server.vercel.app';
-const debug = false;
+const debug = import.meta.env.VITE_DEBUG === 'true';
 let regionDataPoller: any = null;
 let lastCheckedUrl = '';
 let lastRegionChangeTimestamp = 0;
