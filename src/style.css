@@ -2,15 +2,15 @@
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
 :root {
-    --primary-color: #007bff;
+    --primary-color: #5865F2;
     --secondary-color: #6c757d;
-    --background-color: #f8f9fa;
+    --background-color: #F2F3F5;
     --surface-color: #ffffff;
     --on-primary-color: #ffffff;
     --on-background-color: #212529;
     --on-surface-color: #495057;
     --on-surface-variant-color: #6c757d;
-    --outline-color: #dee2e6;
+    --outline-color: #DCDDDE;
     --shadow-color: rgba(0, 0, 0, 0.1);
 }
 
@@ -373,7 +373,7 @@
 }
 
 .chat-message {
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     animation: slideIn 0.3s ease-out;
     display: flex;
     flex-direction: column;
@@ -388,7 +388,7 @@
     font-size: 12px;
     font-weight: 600;
     color: var(--secondary-color);
-    margin-bottom: 4px;
+    margin-bottom: 2px;
     margin-left: 12px;
 }
 
