@@ -454,13 +454,14 @@ export async function loadMessages() {
     const cachedMessages = getMessagesFromCache(chatRoomId as string);
 
     if (cachedMessages) {
-        if (debug) console.log(`Found cached messages for ${chatRoomId}. Rendering instantly.`);
+        // --- Cache Hit ---
+        if (debug) console.log(`Found cached messages for ${chatRoomId}. Rendering instantly from cache.`);
         renderMessageList(messagesContainer, cachedMessages, chatRoomName, pixelData);
         setDisplayedChatRoomId(chatRoomId);
         chatInput.disabled = false;
         sendButton.disabled = false;
     } else {
-        // Show loading indicator only if there's no cached version.
+        // --- Cache Miss ---
         messagesContainer.innerHTML = `
             <div class="loading-indicator">
                 <div class="m3-progress-bar" style="width: 50%; margin: 0 auto;"></div>
@@ -468,38 +469,34 @@ export async function loadMessages() {
             </div>`;
         chatInput.disabled = true;
         sendButton.disabled = true;
-    }
 
-    // --- Fetch latest messages from server ---
-    try {
-        let response: any;
-        const preloadedMessages = getPreloadedAllianceMessages();
+        try {
+            let response: any;
+            const preloadedMessages = getPreloadedAllianceMessages();
 
-        if (currentChatRoom === 'alliance' && preloadedMessages) {
-            if (debug) console.log("Using preloaded alliance messages.");
-            response = preloadedMessages;
-            setPreloadedAllianceMessages(null);
-        } else {
-            response = await fetchMessages(chatRoomId as string);
-        }
+            if (currentChatRoom === 'alliance' && preloadedMessages) {
+                if (debug) console.log("Using preloaded alliance messages.");
+                response = preloadedMessages;
+                setPreloadedAllianceMessages(null);
+            } else {
+                response = await fetchMessages(chatRoomId as string);
+            }
 
-        if (getCurrentChatRoom() !== initialChatRoom) {
-            if (debug) console.log(`Room changed from ${initialChatRoom} to ${getCurrentChatRoom()}. Aborting message render.`);
-            return;
-        }
+            if (getCurrentChatRoom() !== initialChatRoom) {
+                if (debug) console.log(`Room changed from ${initialChatRoom} to ${getCurrentChatRoom()}. Aborting message render.`);
+                return;
+            }
 
-        // Update cache and render the new list
-        setMessagesInCache(chatRoomId as string, response);
-        renderMessageList(messagesContainer, response, chatRoomName, pixelData);
+            // Update cache and render the new list
+            setMessagesInCache(chatRoomId as string, response);
+            renderMessageList(messagesContainer, response, chatRoomName, pixelData);
 
-        setDisplayedChatRoomId(chatRoomId);
-        chatInput.disabled = false;
-        sendButton.disabled = false;
+            setDisplayedChatRoomId(chatRoomId);
+            chatInput.disabled = false;
+            sendButton.disabled = false;
 
-    } catch (error) {
-        if (debug) console.error('Error loading messages:', error);
-        // Only show error if we didn't have a cached version to display.
-        if (!cachedMessages) {
+        } catch (error) {
+            if (debug) console.error('Error loading messages:', error);
             setDisplayedChatRoomId(null);
             messagesContainer.innerHTML = `
                 <div class="info-message">
@@ -653,17 +650,29 @@ export function establishSseConnection() {
 
     if (chatRoomId && userData) {
         if (debug) console.log(`Establishing SSE connection for ${chatRoomId}`);
+        const currentRoomId = chatRoomId; // Capture room ID for closure
+
         eventSource = connectToEvents(chatRoomId, (newMessage) => {
             if (debug) console.log("SSE message received:", newMessage);
-            // Ensure the message is for the currently active chat room
-            const currentRoomId = getCurrentChatRoom() === 'region'
-                ? getRegionData()?.name
-                : `alliance_${getUserData()?.allianceId}`;
 
+            // Ensure the message is for the currently active chat room
             if (newMessage.region === currentRoomId) {
+                // Add message to the visible chat UI
                 addMessageToChat(newMessage.name, newMessage.messages, newMessage.createdAt, newMessage.uid === userData.id.toString());
-            } else {
-                if (debug) console.log("Received message for inactive room:", newMessage.region);
+
+                // Also add the new message to the cache for this room
+                const cachedResponse = getMessagesFromCache(currentRoomId);
+                if (cachedResponse && cachedResponse.data) {
+                    const newMsgData = {
+                        name: newMessage.name,
+                        messages: newMessage.messages,
+                        createdAt: newMessage.createdAt,
+                        uid: newMessage.uid
+                    };
+                    cachedResponse.data.push(newMsgData);
+                    setMessagesInCache(currentRoomId, cachedResponse);
+                    if (debug) console.log(`Appended new message to cache for ${currentRoomId}`);
+                }
             }
         });
     }
