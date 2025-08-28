@@ -71,7 +71,6 @@ modal.innerHTML = `
                     <div class="livechat-user-details"><i class="material-icons">tag</i> ID: ...</div>
                     <div class="livechat-user-details"><i class="material-icons">place</i> Region: ...</div>
                     <div class="livechat-user-details" id="area-info"><i class="material-icons">my_location</i> Area: ...</div>
-                    <div class="game-status">Online</div>
                 </div>
                     <div class="livechat-header-actions">
                         <button class="livechat-settings-btn"><i class="material-icons">settings</i></button>
