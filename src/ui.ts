@@ -409,10 +409,19 @@ export async function loadMessages() {
         return;
     }
 
-    if (messagesContainer.children.length > 1) {
+    if (chatRoomId && chatRoomId === getDisplayedChatRoomId()) {
         if (debug) console.log(`Messages for room ${chatRoomId} are already displayed. Skipping fetch.`);
         return;
     }
+
+    // Show loading indicator
+    messagesContainer.innerHTML = `
+        <div class="loading-indicator">
+            <div class="m3-progress-bar" style="width: 50%; margin: 0 auto;"></div>
+            <div style="margin-top: 8px;">Loading...</div>
+        </div>`;
+    chatInput.disabled = true;
+    sendButton.disabled = true;
 
     try {
         let response: any;
