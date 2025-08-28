@@ -409,7 +409,8 @@ export async function loadMessages() {
         return;
     }
 
-    if (chatRoomId === getDisplayedChatRoomId()) {
+    const messagesContainer = currentChatRoom === 'region' ? regionMessages : allianceMessages;
+    if (messagesContainer.children.length > 1) {
         if (debug) console.log(`Messages for room ${chatRoomId} are already displayed. Skipping fetch.`);
         return;
     }
