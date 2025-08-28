@@ -242,7 +242,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    align-self: center;
 }
 
 .livechat-settings-close:hover {
@@ -416,7 +415,7 @@
     background-color: var(--surface-color);
     display: flex;
     gap: 8px;
-    align-items: center;
+    align-items: flex-end;
     border-top: 1px solid var(--outline-color);
 }
 
