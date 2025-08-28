@@ -74,6 +74,7 @@ export function setCurrentChatRoom(room: string) {
 // --- Settings ---
 let settings = {
     enterToSend: true,
+    lockChat: false,
 };
 
 export const getSettings = () => settings;
