@@ -1,4 +1,4 @@
-import { getSettings, loadSettings, setSettings, getUserData, getRegionData, getAllianceData, getCurrentChatRoom, setCurrentChatRoom, setUserData, setAllianceData, getPreloadedAllianceMessages, setPreloadedAllianceMessages, getPixelData, getDisplayedChatRoomId, setDisplayedChatRoomId } from './state';
+import { getSettings, loadSettings, setSettings, getUserData, getRegionData, getAllianceData, getCurrentChatRoom, setCurrentChatRoom, setUserData, setAllianceData, getPreloadedAllianceMessages, setPreloadedAllianceMessages, getPixelData, getDisplayedChatRoomId, setDisplayedChatRoomId, getMessagesFromCache, setMessagesInCache } from './state';
 import { fetchMessages, sendMessage, fetchAPI, connectToEvents } from './api';
 import { gsap } from 'gsap';
 import { Draggable } from 'gsap/Draggable';
@@ -353,6 +353,42 @@ export function updateUserInfo() {
     }
 }
 
+function renderMessageList(messagesContainer: HTMLElement, response: any, chatRoomName: string, pixelData: any) {
+    const userData = getUserData();
+    messagesContainer.innerHTML = '';
+    if (response && response.data && response.data.length > 0) {
+        if (debug) console.log(`Loaded ${response.data.length} messages for ${chatRoomName}`);
+        response.data.forEach((msg: any) => {
+            addMessageToChat(msg.name, msg.messages, msg.createdAt, msg.uid === userData.id.toString());
+        });
+    } else {
+        if (debug) console.log(`No messages found for ${chatRoomName}`);
+
+        let mainWelcomeText = `Welcome to ${chatRoomName} chat!`;
+        let conversationText = 'Be the first to start the conversation.';
+
+        if (getCurrentChatRoom() === 'region' && pixelData) {
+            mainWelcomeText = `Welcome to ${chatRoomName} #${pixelData.boardId} chat!`;
+            const roomName = getRoomNameFromRanges(pixelData.xRange, pixelData.yRange);
+            conversationText = `Be the first to start the conversation in <strong>${roomName}</strong>`;
+        }
+
+        const welcomeMessage = `
+            <div><strong>${mainWelcomeText}</strong></div>
+            <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">${conversationText}</div>
+        `;
+
+        messagesContainer.innerHTML = `
+            <div class="info-message">
+                <i class="material-icons">chat</i>
+                ${welcomeMessage}
+            </div>
+        `;
+    }
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+
 // Load and display messages
 export async function loadMessages() {
     const userData = getUserData();
@@ -414,15 +450,27 @@ export async function loadMessages() {
         return;
     }
 
-    // Show loading indicator
-    messagesContainer.innerHTML = `
-        <div class="loading-indicator">
-            <div class="m3-progress-bar" style="width: 50%; margin: 0 auto;"></div>
-            <div style="margin-top: 8px;">Loading...</div>
-        </div>`;
-    chatInput.disabled = true;
-    sendButton.disabled = true;
+    // --- Caching Logic ---
+    const cachedMessages = getMessagesFromCache(chatRoomId as string);
 
+    if (cachedMessages) {
+        if (debug) console.log(`Found cached messages for ${chatRoomId}. Rendering instantly.`);
+        renderMessageList(messagesContainer, cachedMessages, chatRoomName, pixelData);
+        setDisplayedChatRoomId(chatRoomId);
+        chatInput.disabled = false;
+        sendButton.disabled = false;
+    } else {
+        // Show loading indicator only if there's no cached version.
+        messagesContainer.innerHTML = `
+            <div class="loading-indicator">
+                <div class="m3-progress-bar" style="width: 50%; margin: 0 auto;"></div>
+                <div style="margin-top: 8px;">Loading...</div>
+            </div>`;
+        chatInput.disabled = true;
+        sendButton.disabled = true;
+    }
+
+    // --- Fetch latest messages from server ---
     try {
         let response: any;
         const preloadedMessages = getPreloadedAllianceMessages();
@@ -440,53 +488,29 @@ export async function loadMessages() {
             return;
         }
 
-        messagesContainer.innerHTML = '';
-        if (response && response.data && response.data.length > 0) {
-            if (debug) console.log(`Loaded ${response.data.length} messages for ${chatRoomName}`);
-            response.data.forEach((msg: any) => {
-                addMessageToChat(msg.name, msg.messages, msg.createdAt, msg.uid === userData.id.toString());
-            });
-        } else {
-            if (debug) console.log(`No messages found for ${chatRoomName}`);
-
-            let mainWelcomeText = `Welcome to ${chatRoomName} chat!`;
-            let conversationText = 'Be the first to start the conversation.';
-
-            if (currentChatRoom === 'region' && pixelData) {
-                mainWelcomeText = `Welcome to ${chatRoomName} #${pixelData.boardId} chat!`;
-                const roomName = getRoomNameFromRanges(pixelData.xRange, pixelData.yRange);
-                conversationText = `Be the first to start the conversation in <strong>${roomName}</strong>`;
-            }
-
-            const welcomeMessage = `
-                <div><strong>${mainWelcomeText}</strong></div>
-                <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">${conversationText}</div>
-            `;
-
-            messagesContainer.innerHTML = `
-                <div class="info-message">
-                    <i class="material-icons">chat</i>
-                    ${welcomeMessage}
-                </div>
-            `;
-        }
+        // Update cache and render the new list
+        setMessagesInCache(chatRoomId as string, response);
+        renderMessageList(messagesContainer, response, chatRoomName, pixelData);
 
         setDisplayedChatRoomId(chatRoomId);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
         chatInput.disabled = false;
         sendButton.disabled = false;
+
     } catch (error) {
         if (debug) console.error('Error loading messages:', error);
-        setDisplayedChatRoomId(null); // Clear displayed room on error
-        messagesContainer.innerHTML = `
-            <div class="info-message">
-                <i class="material-icons">warning</i>
-                <div><strong>Failed to load messages</strong></div>
-                <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Please check your connection and try again.</div>
-            </div>
-        `;
-        chatInput.disabled = true;
-        sendButton.disabled = true;
+        // Only show error if we didn't have a cached version to display.
+        if (!cachedMessages) {
+            setDisplayedChatRoomId(null);
+            messagesContainer.innerHTML = `
+                <div class="info-message">
+                    <i class="material-icons">warning</i>
+                    <div><strong>Failed to load messages</strong></div>
+                    <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Please check your connection and try again.</div>
+                </div>
+            `;
+            chatInput.disabled = true;
+            sendButton.disabled = true;
+        }
     }
 }
 

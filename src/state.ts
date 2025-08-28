@@ -5,6 +5,15 @@ let allianceData: any = null;
 let preloadedAllianceMessages: any = null;
 let currentChatRoom = 'region'; // 'region' or 'alliance'
 let displayedChatRoomId: string | null = null;
+const messageCache = new Map<string, any>();
+
+export function getMessagesFromCache(roomId: string) {
+    return messageCache.get(roomId);
+}
+
+export function setMessagesInCache(roomId: string, messages: any) {
+    messageCache.set(roomId, messages);
+}
 
 export function getDisplayedChatRoomId() {
     return displayedChatRoomId;
