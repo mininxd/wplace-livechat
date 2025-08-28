@@ -580,7 +580,6 @@ export async function handleSendMessage() {
                 chatInput.disabled = false;
                 sendButton.innerHTML = '<i class="material-icons">send</i>';
                 chatInput.placeholder = 'Type your message...';
-                chatInput.focus();
             }
         }, 1000);
 
@@ -692,6 +691,5 @@ export async function handleFabClick() {
     establishSseConnection();
 
     if (userData && getRegionData()) {
-        chatInput.focus();
     }
 }
