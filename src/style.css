@@ -153,7 +153,7 @@
 
 .livechat-settings-content h4 {
     margin-top: 0;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
     border-bottom: 1px solid var(--outline-color);
     padding-bottom: 8px;
 }
@@ -163,7 +163,7 @@
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
-    padding: 8px;
+    padding: 5px 10px;
     border-radius: 8px;
     transition: background-color 0.2s;
 }
@@ -178,6 +178,7 @@
     height: 32px;
     display: flex;
     align-items: center;
+    transform: scale(0.8);
 }
 
 .m3-switch input {
@@ -467,6 +468,7 @@
 
 .livechat-send {
     position: relative;
+    user-select: none;
     background: var(--primary-color);
     border: none;
     border-radius: 50%;
@@ -474,12 +476,12 @@
     height: 42px;
     color: var(--on-primary-color);
     cursor: pointer;
-    font-size: 18px;
+    font-size: 16px;
     transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
-    transform: translateY(-2px);
+    transform: translateY(-3px);
     padding: 5px;
 }
 
@@ -496,7 +498,7 @@
 
 .game-status {
     font-size: 11px;
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(0, 0, 0, 0.035);
     color: var(--on-surface-color);
     padding: 4px 8px;
     border-radius: 8px;
@@ -600,8 +602,8 @@
     }
 
     .livechat-fab {
-        bottom: 15vh;
-        right: 16px;
+        bottom: 20vh;
+        right: 1rem;
         display: flex !important;
         visibility: visible !important;
         opacity: 1 !important;
