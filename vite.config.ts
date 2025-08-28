@@ -7,7 +7,7 @@ export default defineConfig({
        entry: 'src/main.ts',
        userscript: {
          name: 'Wplace Live Chats',
-         version: '2.2.1',
+         version: '2.3.0',
          description: 'Livechat for wplace.live',
          author: 'mininxd',
          match: ['https://wplace.live/*', 'https://wplace.live'],

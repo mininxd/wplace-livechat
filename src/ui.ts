@@ -409,10 +409,19 @@ export async function loadMessages() {
         return;
     }
 
-    if (chatRoomId === getDisplayedChatRoomId()) {
+    if (chatRoomId && chatRoomId === getDisplayedChatRoomId()) {
         if (debug) console.log(`Messages for room ${chatRoomId} are already displayed. Skipping fetch.`);
         return;
     }
+
+    // Show loading indicator
+    messagesContainer.innerHTML = `
+        <div class="loading-indicator">
+            <div class="m3-progress-bar" style="width: 50%; margin: 0 auto;"></div>
+            <div style="margin-top: 8px;">Loading...</div>
+        </div>`;
+    chatInput.disabled = true;
+    sendButton.disabled = true;
 
     try {
         let response: any;
@@ -580,7 +589,6 @@ export async function handleSendMessage() {
                 chatInput.disabled = false;
                 sendButton.innerHTML = '<i class="material-icons">send</i>';
                 chatInput.placeholder = 'Type your message...';
-                chatInput.focus();
             }
         }, 1000);
 
@@ -692,6 +700,5 @@ export async function handleFabClick() {
     establishSseConnection();
 
     if (userData && getRegionData()) {
-        chatInput.focus();
     }
 }
