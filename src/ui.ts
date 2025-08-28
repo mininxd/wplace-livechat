@@ -115,7 +115,7 @@ settingsModal.innerHTML = `
     <div class="livechat-settings-content">
         <h4>Chat Settings</h4>
         <label class="setting-item">
-            <span>Press Enter to send</span>
+            <span>Press Enter to Send</span>
             <div class="m3-switch">
                 <input type="checkbox" id="enter-to-send" />
                 <div class="m3-switch-track"></div>
@@ -324,6 +324,7 @@ export function updateUserInfo() {
             <h3><i class="material-icons">person</i> ${userData.name} <span style="font-weight: 300; font-size: 14px;">#${userData.id}</span></h3>
             ${regionDisplay}
             <div class="game-status">Level ${Math.floor(userData.level)}</div>
+            <div class="game-status">Level ${Math.floor(userData.level)}</div>
         `;
 
         if (cooldownRemaining > 0) {
@@ -331,7 +332,7 @@ export function updateUserInfo() {
             if (infoIcon) {
                 infoIcon.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    infoPopup.textContent = `You can change regions again in ${cooldownRemaining} seconds.`;
+                    infoPopup.textContent = `You can change regions once cooldown.`;
                     const rect = infoIcon.getBoundingClientRect();
                     infoPopup.style.left = `${rect.left + window.scrollX}px`;
                     infoPopup.style.top = `${rect.bottom + window.scrollY + 5}px`;
@@ -422,7 +423,7 @@ export async function loadMessages() {
                 <div class="info-message">
                     <i class="material-icons">near_me</i>
                     <div><strong>Tap on a pixel to join a region's chat</strong></div>
-                    <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Click on any pixel on the canvas to join the regional chat for that area.</div>
+                    <div style="font-size: 12px; margin-top: 8px; opacity: 0.75;">Click on any pixel on the canvas to join the regional chat for that area.</div>
                 </div>
             `;
             chatInput.disabled = true;

@@ -470,8 +470,8 @@
     background: var(--primary-color);
     border: none;
     border-radius: 50%;
-    width: 36px;
-    height: 36px;
+    width: 42px;
+    height: 42px;
     color: var(--on-primary-color);
     cursor: pointer;
     font-size: 18px;
@@ -479,10 +479,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    transform: translateY(-2px);
+    padding: 5px;
 }
 
 .livechat-send:hover:not(:disabled) {
-    transform: scale(1.05);
     box-shadow: 0 2px 8px var(--shadow-color);
     background: #0069d9;
 }
@@ -490,7 +491,6 @@
 .livechat-send:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    transform: none;
     background: var(--secondary-color);
 }
 
