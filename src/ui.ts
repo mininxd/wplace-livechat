@@ -308,7 +308,7 @@ export function updateUserInfo() {
         userInfo.innerHTML = `
             <h3><i class="material-icons">person</i> ${userData.name} <span style="font-weight: 300; font-size: 14px;">#${userData.id}</span></h3>
             ${regionDisplay}
-            <div class="game-status"><i class="material-icons" style="color: #4CAF50; font-size: 8px;">circle</i> Level ${Math.floor(userData.level)}</div>
+            <div class="game-status"><i class="material-icons" style="color: #4CAF50; font-size: 8px;">circle</i> Online</div>
         `;
 
         if (cooldownRemaining > 0) {
