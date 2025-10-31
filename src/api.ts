@@ -161,12 +161,22 @@ export function startDataPolling() {
     }
 }
 
-export async function checkEventProgress() {
-    try {
-        const data = await fetchAPI("https://backend.wplace.live/event/hallowen/pumpkins/claimed/");
-        return data;
-    } catch (error) {
-        if (debug) console.error("Error fetching event progress:", error);
-        return null;
-    }
+export function checkEventProgress() {
+    return new Promise<any>((resolve, reject) => {
+        GM_xmlhttpRequest({
+            method: 'GET',
+            url: `https://backend.wplace.live/event/hallowen/pumpkins/claimed/`,
+            onload: function(response: GM.Response<any>) {
+                try {
+                    const data = JSON.parse(response.responseText);
+                    resolve(data);
+                } catch (e) {
+                    reject(e);
+                }
+            },
+            onerror: function(error: any) {
+                reject(error);
+            }
+        });
+    });
 }
