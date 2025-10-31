@@ -140,6 +140,19 @@ settingsModal.innerHTML = `
 `;
 document.body.appendChild(settingsModal);
 
+// Create stats modal
+export const statsModal = document.createElement('div');
+statsModal.className = 'livechat-stats-modal';
+statsModal.style.display = 'none'; // Initially hidden
+statsModal.innerHTML = `
+    <div class="livechat-stats-content">
+        <h4>Event Stats</h4>
+        <div id="stats-data"></div>
+        <button class="livechat-stats-close"><i class="material-icons">close</i></button>
+    </div>
+`;
+document.body.appendChild(statsModal);
+
 // Create info popup
 export const infoPopup = document.createElement('div');
 infoPopup.className = 'livechat-info-popup';
@@ -776,16 +789,3 @@ export async function handleFabClick() {
     if (userData && getRegionData()) {
     }
 }
-
-// Create stats modal
-export const statsModal = document.createElement('div');
-statsModal.className = 'livechat-stats-modal';
-statsModal.style.display = 'none'; // Initially hidden
-statsModal.innerHTML = `
-    <div class="livechat-stats-content">
-        <h4>Event Stats</h4>
-        <div id="stats-data"></div>
-        <button class="livechat-stats-close"><i class="material-icons">close</i></button>
-    </div>
-`;
-document.body.appendChild(statsModal);
