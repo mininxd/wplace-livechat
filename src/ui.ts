@@ -1,5 +1,5 @@
 import { getSettings, loadSettings, setSettings, getUserData, getRegionData, getAllianceData, getCurrentChatRoom, setCurrentChatRoom, setUserData, setAllianceData, getPreloadedAllianceMessages, setPreloadedAllianceMessages, getPixelData, getDisplayedChatRoomId, setDisplayedChatRoomId, getMessagesFromCache, setMessagesInCache } from './state';
-import { fetchMessages, sendMessage, fetchAPI, connectToEvents } from './api';
+import { fetchMessages, sendMessage, fetchAPI, connectToEvents, checkEventProgress } from './api';
 import { gsap } from 'gsap';
 import { Draggable } from 'gsap/Draggable';
 
@@ -73,6 +73,7 @@ modal.innerHTML = `
                     <div class="livechat-user-details" id="area-info"><i class="material-icons">my_location</i> Area: ...</div>
                 </div>
                     <div class="livechat-header-actions">
+                        <button class="livechat-stats-btn"><i class="material-icons">query_stats</i></button>
                         <button class="livechat-settings-btn"><i class="material-icons">settings</i></button>
                         <button class="livechat-close"><i class="material-icons">close</i></button>
                     </div>
@@ -151,7 +152,9 @@ export const allianceMessages = document.getElementById('alliance-messages') as 
 export const chatInput = document.getElementById('chatInput') as HTMLTextAreaElement;
 export const sendButton = document.getElementById('sendButton') as HTMLButtonElement;
 export const closeButton = modal.querySelector('.livechat-close') as HTMLButtonElement;
+const statsButton = modal.querySelector('.livechat-stats-btn') as HTMLButtonElement;
 const settingsButton = modal.querySelector('.livechat-settings-btn') as HTMLButtonElement;
+const statsCloseButton = statsModal.querySelector('.livechat-stats-close') as HTMLButtonElement;
 const settingsCloseButton = settingsModal.querySelector('.livechat-settings-close') as HTMLButtonElement;
 const enterToSendCheckbox = document.getElementById('enter-to-send') as HTMLInputElement;
 const lockChatCheckbox = document.getElementById('lock-chat') as HTMLInputElement;
@@ -176,6 +179,29 @@ settingsCloseButton.addEventListener('click', () => {
 settingsModal.addEventListener('click', (e) => {
     if (e.target === settingsModal) {
         settingsModal.style.display = 'none';
+    }
+});
+
+
+// Stats modal listeners
+statsButton.addEventListener('click', async () => {
+    const statsData = await checkEventProgress();
+    const statsDataElement = document.getElementById('stats-data') as HTMLElement;
+    if (statsData && statsData.claimed) {
+        statsDataElement.innerHTML = `<p>Pumpkins Claimed: ${statsData.claimed.length}</p>`;
+    } else {
+        statsDataElement.innerHTML = `<p>Could not load stats.</p>`;
+    }
+    statsModal.style.display = 'flex';
+});
+
+statsCloseButton.addEventListener('click', () => {
+    statsModal.style.display = 'none';
+});
+
+statsModal.addEventListener('click', (e) => {
+    if (e.target === statsModal) {
+        statsModal.style.display = 'none';
     }
 });
 
@@ -750,3 +776,16 @@ export async function handleFabClick() {
     if (userData && getRegionData()) {
     }
 }
+
+// Create stats modal
+export const statsModal = document.createElement('div');
+statsModal.className = 'livechat-stats-modal';
+statsModal.style.display = 'none'; // Initially hidden
+statsModal.innerHTML = `
+    <div class="livechat-stats-content">
+        <h4>Event Stats</h4>
+        <div id="stats-data"></div>
+        <button class="livechat-stats-close"><i class="material-icons">close</i></button>
+    </div>
+`;
+document.body.appendChild(statsModal);

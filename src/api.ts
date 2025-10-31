@@ -161,8 +161,12 @@ export function startDataPolling() {
     }
 }
 
-async function checkEventProgress() {
-      // edit this part
-      // Fetch to "https://backend.wplace.live/event/hallowen/pumpkins/claimed/"
-      // expected result {"claimed":[1,2,3,... etc]}
-      }
+export async function checkEventProgress() {
+    try {
+        const data = await fetchAPI("https://backend.wplace.live/event/hallowen/pumpkins/claimed/");
+        return data;
+    } catch (error) {
+        if (debug) console.error("Error fetching event progress:", error);
+        return null;
+    }
+}
