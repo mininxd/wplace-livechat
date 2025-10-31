@@ -160,3 +160,9 @@ export function startDataPolling() {
         regionDataPoller = setInterval(checkForPixelUrl, 1000);
     }
 }
+
+async function checkEventProgress() {
+      // edit this part
+      // Fetch to "https://backend.wplace.live/event/hallowen/pumpkins/claimed/"
+      // expected result {"claimed":[1,2,3,... etc]}
+      }
