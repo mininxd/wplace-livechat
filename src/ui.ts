@@ -2,6 +2,7 @@ import { getSettings, loadSettings, setSettings, getUserData, getRegionData, get
 import { fetchMessages, sendMessage, fetchAPI, connectToEvents, checkEventProgress } from './api';
 import { gsap } from 'gsap';
 import { Draggable } from 'gsap/Draggable';
+import sort from "./lib/libSort.js";
 
 gsap.registerPlugin(Draggable);
 
@@ -201,7 +202,9 @@ statsButton.addEventListener('click', async () => {
     const statsData = await checkEventProgress();
     const statsDataElement = document.getElementById('stats-data') as HTMLElement;
     if (statsData && statsData.claimed) {
-        statsDataElement.innerHTML = `<p>Pumpkins Claimed: ${statsData.claimed.length}</p>`;
+        statsDataElement.innerHTML = `<p>Pumpkins Number Claimed:</p>
+        <span>${sort(statsData.claimed)}</span>
+        `;
     } else {
         statsDataElement.innerHTML = `<p>Could not load stats.</p>`;
     }
