@@ -6,6 +6,17 @@ import sort from "./lib/libSort.js";
 
 gsap.registerPlugin(Draggable);
 
+function filtered(max, exclude) {
+  const excludeList = Array.isArray(exclude) ? exclude : [exclude];
+  const result = [];
+  for (let i = 1; i <= max; i++) {
+    if (!excludeList.includes(i)) {
+      result.push(i);
+    }
+  }
+  return result;
+}
+
 function getRoomNameFromRanges(xRange: string, yRange: string): string {
     if (xRange === '0-499' && yRange === '0-499') return 'Room 1';
     if (xRange === '500-999' && yRange === '0-499') return 'Room 2';
@@ -202,8 +213,10 @@ statsButton.addEventListener('click', async () => {
     const statsData = await checkEventProgress();
     const statsDataElement = document.getElementById('stats-data') as HTMLElement;
     if (statsData && statsData.claimed) {
-        statsDataElement.innerHTML = `<p>Pumpkins Number Claimed:</p>
-        <span>${sort(statsData.claimed)}</span>
+      const filteredStats = filtered(100, statsData.claimed);
+        statsDataElement.innerHTML = `<p>Pumpkins Remains:</p>
+        <span class="break-words">${sort(filteredStats)}</span>
+      
         `;
     } else {
         statsDataElement.innerHTML = `<p>Could not load stats.</p>`;
