@@ -1,10 +1,11 @@
 import { getSettings, loadSettings, setSettings, getUserData, getRegionData, getAllianceData, getCurrentChatRoom, setCurrentChatRoom, setUserData, setAllianceData, getPreloadedAllianceMessages, setPreloadedAllianceMessages, getPixelData, getDisplayedChatRoomId, setDisplayedChatRoomId, getMessagesFromCache, setMessagesInCache } from './state';
 import { fetchMessages, sendMessage, fetchAPI, connectToEvents } from './api';
+import version from './system';
+const newVersion = await version();
 import { gsap } from 'gsap';
 import { Draggable } from 'gsap/Draggable';
 
 gsap.registerPlugin(Draggable);
-
 function getRoomNameFromRanges(xRange: string, yRange: string): string {
     if (xRange === '0-499' && yRange === '0-499') return 'Room 1';
     if (xRange === '500-999' && yRange === '0-499') return 'Room 2';
@@ -93,6 +94,7 @@ modal.innerHTML = `
                         <button class="livechat-close"><i class="material-icons">close</i></button>
                     </div>
             </div>
+            ${newVersion}
             <div class="livechat-tabs" id="chatTabs">
                 </div>
         </div>
