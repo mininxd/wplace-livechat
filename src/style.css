@@ -2,8 +2,11 @@
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
 :root {
-    --primary-color: #5865F2;
+    --primary-color: #0266d1;
     --secondary-color: #6c757d;
+    --success-color: #58b700;
+    --warning-color: #fecb01;
+    --danger-color: #ea2600;
     --background-color: #F2F3F5;
     --surface-color: #ffffff;
     --on-primary-color: #ffffff;
@@ -12,6 +15,7 @@
     --on-surface-variant-color: #6c757d;
     --outline-color: #DCDDDE;
     --shadow-color: rgba(0, 0, 0, 0.1);
+    --border-color: #0256e1;
 }
 
 .livechat-container {
@@ -22,18 +26,18 @@
 
 .livechat-fab {
     position: fixed;
-    bottom: 20vh;
+    bottom: 24vh;
     right: 24px;
     background: var(--primary-color);
     color: var(--on-primary-color);
-    border: none;
-    width: 48px;
-    height: 48px;
+    border: 1px var(--border-color) solid;
+    width: 40px;
+    height: 40px;
     border-radius: 12px;
     cursor: pointer;
     box-shadow: 0 4px 12px var(--shadow-color);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 10001;
+    z-index: 0;
     display: flex !important;
     align-items: center;
     justify-content: center;
@@ -107,7 +111,7 @@
 .livechat-settings-btn {
     background: transparent;
     border: none;
-    border-radius: 50%;
+    border-radius: 12px;
     width: 28px;
     height: 28px;
     color: var(--on-surface-color);
@@ -127,7 +131,7 @@
 .livechat-stats-btn {
     background: transparent;
     border: none;
-    border-radius: 50%;
+    border-radius: 12px;
     width: 28px;
     height: 28px;
     color: var(--on-surface-color);
@@ -234,7 +238,7 @@
 .m3-switch-thumb {
     width: 100%;
     height: 100%;
-    border-radius: 50%;
+    border-radius: 12px;
     background-color: var(--on-surface-variant-color);
     box-shadow: 0 1px 3px var(--shadow-color);
     transition: all 0.2s;
