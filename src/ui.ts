@@ -85,9 +85,7 @@ modal.innerHTML = `
             <div class="livechat-header-main">
                 <div class="livechat-user-info" id="userInfo">
                     <h3><i class="material-icons">person</i> Loading...</h3>
-                    <div class="livechat-user-details"><i class="material-icons">tag</i> ID: ...</div>
                     <div class="livechat-user-details"><i class="material-icons">place</i> Region: ...</div>
-                    <div class="livechat-user-details" id="area-info"><i class="material-icons">my_location</i> Area: ...</div>
                 </div>
                     <div class="livechat-header-actions">
                         <button class="livechat-settings-btn"><i class="material-icons">settings</i></button>
@@ -363,7 +361,6 @@ export function updateUserInfo() {
         userInfo.innerHTML = `
             <h3><i class="material-icons">person</i> Loading...</h3>
             <div class="livechat-user-details"><i class="material-icons">place</i> Region: ...</div>
-            <div class="livechat-user-details" id="area-info"><i class="material-icons">my_location</i> Area: ...</div>
             <div class="game-status">Loading</div>
         `;
     }
