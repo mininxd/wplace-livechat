@@ -133,7 +133,7 @@ async function checkForPixelUrl() {
                 if (x && y && boardId) {
                     const xRange = getRange(parseInt(x), 500);
                     const yRange = getRange(parseInt(y), 500);
-                    const newRegionName = `${data.region.name}_${boardId}_${xRange}_${yRange}`;
+                    const newRegionName = `${data.region.name}_${boardId}`;
 
                     if (!currentRegion || currentRegion.name !== newRegionName) {
                         if (getSettings().lockChat && getCurrentChatRoom() === 'region' && getRegionData()) {

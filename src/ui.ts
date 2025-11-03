@@ -605,8 +605,7 @@ export async function handleSendMessage() {
             return;
         }
         chatRoomId = regionData.name;
-        // Extract just the region name (e.g., "Semarang" from "Semarang_1_0-499_0-499")
-        messageRegion = regionData.name.split('_')[0];
+        messageRegion = regionData.name;
     } else if (currentChatRoom === 'alliance') {
         if (!userData.allianceId) {
             if (debug) console.error("Cannot send message, not in an alliance.");
