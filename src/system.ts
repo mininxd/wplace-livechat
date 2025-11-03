@@ -28,7 +28,6 @@ export default async function checkNewVersion() {
             border-radius: 5px;
             margin: 2px 0;
             display: inline-block;
-            width: fit-content;
           "
         >
           Update Available 

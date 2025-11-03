@@ -326,8 +326,8 @@ export function updateUserInfo() {
                 const line1 = `${regionName} #${pixelData.boardId}${cooldownText}`;
 
                 const roomName = getRoomNameFromRanges(pixelData.xRange, pixelData.yRange);
-                const rangesText = `(${pixelData.xRange}, ${pixelData.yRange})`;
-                const line2 = `${roomName} ${rangesText}`;
+              //  const rangesText = `(${pixelData.xRange}, ${pixelData.yRange})`;
+                const line2 = `${roomName}`;
 
                 regionDisplay = `
                     <div class="livechat-user-details"><i class="material-icons">place</i> ${line1}</div>
@@ -407,8 +407,7 @@ function renderMessageList(messagesContainer: HTMLElement, response: any, chatRo
 
         if (getCurrentChatRoom() === 'region' && pixelData) {
             mainWelcomeText = `Welcome to ${chatRoomName} #${pixelData.boardId} chat!`;
-            const roomName = getRoomNameFromRanges(pixelData.xRange, pixelData.yRange);
-            conversationText = `Be the first to start the conversation in <strong>${roomName}</strong>`;
+            conversationText = `Be the first to start the conversation.`;
         }
 
         const welcomeMessage = `
@@ -599,21 +598,24 @@ export async function handleSendMessage() {
     if (!userData || sendButton.disabled) return;
 
     let chatRoomId: string | null = null;
+    let messageRegion: string | null = null;
     if (currentChatRoom === 'region') {
         if (!regionData) {
             if (debug) console.error("Cannot send message, no region selected.");
             return;
         }
         chatRoomId = regionData.name;
+        messageRegion = regionData.name;
     } else if (currentChatRoom === 'alliance') {
         if (!userData.allianceId) {
             if (debug) console.error("Cannot send message, not in an alliance.");
             return;
         }
         chatRoomId = `alliance_${userData.allianceId}`;
+        messageRegion = chatRoomId;
     }
 
-    if (!chatRoomId) return;
+    if (!chatRoomId || !messageRegion) return;
 
     const message = chatInput.value.trim();
     if (!message) return;
@@ -624,7 +626,7 @@ export async function handleSendMessage() {
     sendButton.innerHTML = '<i class="material-icons loading-spinner">sync</i>';
 
     try {
-        await sendMessage(userData.id, userData.name, message, chatRoomId);
+        await sendMessage(userData.id, userData.name, message, messageRegion);
 
         // Clear input after successful send
         chatInput.value = '';
