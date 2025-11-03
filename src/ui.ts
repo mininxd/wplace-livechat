@@ -326,8 +326,8 @@ export function updateUserInfo() {
                 const line1 = `${regionName} #${pixelData.boardId}${cooldownText}`;
 
                 const roomName = getRoomNameFromRanges(pixelData.xRange, pixelData.yRange);
-                const rangesText = `(${pixelData.xRange}, ${pixelData.yRange})`;
-                const line2 = `${roomName} ${rangesText}`;
+              //  const rangesText = `(${pixelData.xRange}, ${pixelData.yRange})`;
+                const line2 = `${roomName}`;
 
                 regionDisplay = `
                     <div class="livechat-user-details"><i class="material-icons">place</i> ${line1}</div>
@@ -407,8 +407,7 @@ function renderMessageList(messagesContainer: HTMLElement, response: any, chatRo
 
         if (getCurrentChatRoom() === 'region' && pixelData) {
             mainWelcomeText = `Welcome to ${chatRoomName} #${pixelData.boardId} chat!`;
-            const roomName = getRoomNameFromRanges(pixelData.xRange, pixelData.yRange);
-            conversationText = `Be the first to start the conversation in <strong>${roomName}</strong>`;
+            conversationText = `Be the first to start the conversation.`;
         }
 
         const welcomeMessage = `
