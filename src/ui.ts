@@ -56,8 +56,24 @@ const ensureFABVisible = () => {
     }
 };
 
-// Check FAB visibility periodically
-setInterval(ensureFABVisible, 2000);
+// Check FAB visibility periodically - reduced frequency for better performance
+setInterval(ensureFABVisible, 5000); // Changed from 2000ms to 5000ms
+
+// Initialize Draggable immediately so FAB can be dragged right away
+Draggable.create(fab, {
+    bounds: "body",
+    allowEventDefault: true,
+    // Add better performance options
+    edgeResistance: 0.65,
+    inertia: true,
+    cursor: "grab",
+    onPress: function() {
+        this.vars.cursor = "grabbing";
+    },
+    onRelease: function() {
+        this.vars.cursor = "grab";
+    }
+});
 
 // Create modal
 export const modal = document.createElement('div');
@@ -723,11 +739,6 @@ export function handleTabClick(e: MouseEvent) {
 
 export async function handleFabClick() {
     modal.classList.add('show');
-
-    Draggable.create(fab, {
-        bounds: "body",
-        allowEventDefault: true
-    });
 
     const userData = getUserData();
 
