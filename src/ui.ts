@@ -598,21 +598,25 @@ export async function handleSendMessage() {
     if (!userData || sendButton.disabled) return;
 
     let chatRoomId: string | null = null;
+    let messageRegion: string | null = null;
     if (currentChatRoom === 'region') {
         if (!regionData) {
             if (debug) console.error("Cannot send message, no region selected.");
             return;
         }
         chatRoomId = regionData.name;
+        // Extract just the region name (e.g., "Semarang" from "Semarang_1_0-499_0-499")
+        messageRegion = regionData.name.split('_')[0];
     } else if (currentChatRoom === 'alliance') {
         if (!userData.allianceId) {
             if (debug) console.error("Cannot send message, not in an alliance.");
             return;
         }
         chatRoomId = `alliance_${userData.allianceId}`;
+        messageRegion = chatRoomId;
     }
 
-    if (!chatRoomId) return;
+    if (!chatRoomId || !messageRegion) return;
 
     const message = chatInput.value.trim();
     if (!message) return;
@@ -623,7 +627,7 @@ export async function handleSendMessage() {
     sendButton.innerHTML = '<i class="material-icons loading-spinner">sync</i>';
 
     try {
-        await sendMessage(userData.id, userData.name, message, chatRoomId);
+        await sendMessage(userData.id, userData.name, message, messageRegion);
 
         // Clear input after successful send
         chatInput.value = '';
