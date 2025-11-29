@@ -11,7 +11,7 @@ export default defineConfig({
       entry: 'src/main.ts',
       userscript: {
         name: 'Wplace Live Chats',
-        version: JSON.stringify(pkg.version),
+        version: pkg.version,
         description: 'Livechat for wplace.live',
         author: 'mininxd',
         icon: 'https://wplace.org/favicon/favicon.svg',
